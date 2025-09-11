@@ -259,10 +259,10 @@ export function MapView({ className }: MapViewProps) {
                     : mode === 'bury'
                       ? selectedLocation 
                         ? 'Pin dropped! Click upload to bury files here.' 
-                        : 'BURY MODE: Click anywhere on the map to place a drop. 🎯 Try unlocking test drops: "test123", "location123", or "Fake Believe"'
+                        : 'BURY MODE: Click anywhere on the map to place a drop. 🎯 Try unlocking test drops: &quot;test123&quot;, &quot;location123&quot;, or &quot;Fake Believe&quot;'
                       : unearthLocation
                         ? 'Enter the secret phrase to unearth files at this location.'
-                        : 'UNEARTH MODE: Click anywhere on the map to search for buried files. Try: London ("test123"), North England ("Fake Believe")'
+                        : 'UNEARTH MODE: Click anywhere on the map to search for buried files. Try: London (&quot;test123&quot;), North England (&quot;Fake Believe&quot;)'
                   }
                 </span>
               </div>

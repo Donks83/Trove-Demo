@@ -6,6 +6,7 @@ function hashSecret(secret: string): string {
 }
 
 // In-memory storage for demo drops (in production this would be a database)
+// eslint-disable-next-line prefer-const
 let demoDropsStore: any[] = [
   {
     id: 'test-drop-1',
@@ -96,6 +97,7 @@ let demoDropsStore: any[] = [
   }
 ]
 
+// eslint-disable-next-line prefer-const
 let uploadedFilesStore: Record<string, { name: string; content: Buffer; type: string }> = {}
 
 export { demoDropsStore, uploadedFilesStore }
