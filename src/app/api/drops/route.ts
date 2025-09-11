@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error in drops API:', error)
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating drop:', error)
     return NextResponse.json(
-      { error: 'Failed to create drop', details: error.message },
+      { error: 'Failed to create drop', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
