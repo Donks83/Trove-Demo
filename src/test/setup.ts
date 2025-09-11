@@ -68,6 +68,12 @@ const mockGeolocation = {
         },
       },
       timestamp: Date.now(),
+      toJSON: function() {
+        return {
+          coords: this.coords,
+          timestamp: this.timestamp
+        };
+      }
     }
     success(position)
   },
