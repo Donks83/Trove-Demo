@@ -113,11 +113,11 @@ export async function POST(request: NextRequest) {
     // Return success with file information in UnlockDropResponse format
     return NextResponse.json({
       success: true,
-      downloadUrls: foundDrop.files.map(file => file.downloadUrl),
+      downloadUrls: foundDrop.files.map((file: any) => file.downloadUrl),
       metadata: {
         title: foundDrop.title,
         description: foundDrop.description,
-        fileNames: foundDrop.files.map(file => file.name),
+        fileNames: foundDrop.files.map((file: any) => file.name),
         createdAt: foundDrop.createdAt.toISOString()
       },
       distance,
