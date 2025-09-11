@@ -34,28 +34,28 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     connectAuthEmulator(auth, `http://${emulatorHost}:9099`, { disableWarnings: true })
     console.log('✅ Connected to Auth emulator')
   } catch (error) {
-    console.log('Auth emulator already connected or failed:', error.message)
+    console.log('Auth emulator already connected or failed:', error instanceof Error ? error.message : 'Unknown error')
   }
   
   try {
     connectFirestoreEmulator(db, emulatorHost, 8081)
     console.log('✅ Connected to Firestore emulator')
   } catch (error) {
-    console.log('Firestore emulator already connected or failed:', error.message)
+    console.log('Firestore emulator already connected or failed:', error instanceof Error ? error.message : 'Unknown error')
   }
   
   try {
     connectStorageEmulator(storage, emulatorHost, 9199)
     console.log('✅ Connected to Storage emulator')
   } catch (error) {
-    console.log('Storage emulator already connected or failed:', error.message)
+    console.log('Storage emulator already connected or failed:', error instanceof Error ? error.message : 'Unknown error')
   }
   
   try {
     connectFunctionsEmulator(functions, emulatorHost, 5001)
     console.log('✅ Connected to Functions emulator')
   } catch (error) {
-    console.log('Functions emulator already connected or failed:', error.message)
+    console.log('Functions emulator already connected or failed:', error instanceof Error ? error.message : 'Unknown error')
   }
 }
 
