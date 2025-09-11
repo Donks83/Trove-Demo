@@ -50,3 +50,5 @@ Thumbs.db
 # Custom
 start-dev.bat
 deploy-guide.md
+disabled-routes-backup.txt
+*.disabled
