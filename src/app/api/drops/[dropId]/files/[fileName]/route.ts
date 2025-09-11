@@ -252,7 +252,7 @@ export async function GET(
       headers.set('Content-Length', uploadedFile.content.length.toString())
       headers.set('Cache-Control', 'no-cache')
       
-      return new NextResponse(uploadedFile.content, {
+      return new NextResponse(uploadedFile.content.buffer, {
         status: 200,
         headers
       })
@@ -285,7 +285,7 @@ export async function GET(
     // Log successful download
     console.log(`Serving demo file: ${fileName} (${content.length} bytes, ${fileInfo.mimeType})`)
     
-    return new NextResponse(content, {
+    return new NextResponse(content.buffer, {
       status: 200,
       headers
     })
