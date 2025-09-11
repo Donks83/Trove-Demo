@@ -1,0 +1,23 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Drops storage - only owner can upload, anyone with valid token can download
+    match /drops/{ownerId}/{dropId}/{fileName} {
+      // Allow upload only by the owner
+      allow write: if request.auth != null && request.auth.uid == ownerId;
+      
+      // Allow read if user owns the drop OR has a valid signed URL
+      // Note: Signed URLs bypass these rules, but we keep this for direct access
+      allow read: if request.auth != null && request.auth.uid == ownerId;
+      
+      // Delete only by owner
+      allow delete: if request.auth != null && request.auth.uid == ownerId;
+    }
+    
+    // User avatars
+    match /avatars/{userId}/{fileName} {
+      allow read, write, delete: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

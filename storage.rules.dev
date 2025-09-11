@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // DEVELOPMENT EMULATOR RULES - More permissive for testing
+    match /{allPaths=**} {
+      // In development, allow authenticated users to read/write
+      // This is less secure but good for development/testing
+      allow read, write: if request.auth != null;
+    }
+    
+    // Production rules (commented out for development)
+    /*
+    match /drops/{ownerId}/{dropId}/{fileName} {
+      allow write: if request.auth != null && request.auth.uid == ownerId;
+      allow read: if request.auth != null && request.auth.uid == ownerId;
+      allow delete: if request.auth != null && request.auth.uid == ownerId;
+    }
+    
+    match /avatars/{userId}/{fileName} {
+      allow read, write, delete: if request.auth != null && request.auth.uid == userId;
+    }
+    */
+  }
+}

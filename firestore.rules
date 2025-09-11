@@ -1,0 +1,38 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read/write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Drops - complex access control
+    match /drops/{dropId} {
+      // Owner can read/write/delete their own drops
+      allow read, write, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+      
+      // Anyone can read public drops (for map display)
+      allow read: if resource.data.scope == "public";
+      
+      // Create drops - must be authenticated and own the drop
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.ownerId
+        && request.resource.data.keys().hasAll(['ownerId', 'title', 'secretHash', 'coords', 'geofenceRadiusM', 'scope', 'createdAt', 'tier'])
+        && request.resource.data.coords.keys().hasAll(['lat', 'lng', 'geohash'])
+        && request.resource.data.scope in ['public', 'private']
+        && request.resource.data.tier in ['free', 'premium', 'business'];
+    }
+    
+    // Access logs - only system can write, owner can read
+    match /dropAccessLogs/{dropId}/{logId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow create: if request.auth != null;
+    }
+    
+    // Rate limiting buckets - system managed
+    match /rateLimits/{bucket} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

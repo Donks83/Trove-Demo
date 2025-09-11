@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // DEVELOPMENT EMULATOR RULES - More permissive for testing
+    match /{document=**} {
+      // In development, allow authenticated users to read/write most things
+      // This is less secure but good for development/testing
+      allow read, write: if request.auth != null;
+    }
+    
+    // Production rules (commented out for development)
+    /*
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /drops/{dropId} {
+      allow read, write, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+      allow read: if resource.data.scope == "public";
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.ownerId
+        && request.resource.data.keys().hasAll(['ownerId', 'title', 'secretHash', 'coords', 'geofenceRadiusM', 'scope', 'createdAt', 'tier'])
+        && request.resource.data.coords.keys().hasAll(['lat', 'lng', 'geohash'])
+        && request.resource.data.scope in ['public', 'private']
+        && request.resource.data.tier in ['free', 'premium', 'business'];
+    }
+    
+    match /dropAccessLogs/{dropId}/{logId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow create: if request.auth != null;
+    }
+    
+    match /rateLimits/{bucket} {
+      allow read, write: if request.auth != null;
+    }
+    */
+  }
+}

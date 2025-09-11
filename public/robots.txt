@@ -1,0 +1,30 @@
+User-agent: *
+Allow: /
+
+# Allow indexing of public pages
+Allow: /
+Allow: /about
+Allow: /privacy
+Allow: /terms
+
+# Disallow private/authenticated pages
+Disallow: /app/
+Disallow: /api/
+
+# Disallow sensitive or internal paths
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /firebase-*
+
+# Allow common assets
+Allow: /icons/
+Allow: /images/
+Allow: /screenshots/
+Allow: /*.css
+Allow: /*.js
+
+# Sitemap location
+Sitemap: https://trove.app/sitemap.xml
+
+# Crawl-delay for being nice to servers
+Crawl-delay: 1

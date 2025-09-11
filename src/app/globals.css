@@ -1,0 +1,249 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light theme colors */
+    --background: 255 255 255;
+    --foreground: 17 24 39;
+    --card: 255 255 255;
+    --card-foreground: 17 24 39;
+    --popover: 255 255 255;
+    --popover-foreground: 17 24 39;
+    --primary: 59 130 246;
+    --primary-foreground: 255 255 255;
+    --secondary: 243 244 246;
+    --secondary-foreground: 17 24 39;
+    --muted: 243 244 246;
+    --muted-foreground: 107 114 128;
+    --accent: 243 244 246;
+    --accent-foreground: 17 24 39;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --border: 229 231 235;
+    --input: 209 213 219;
+    --ring: 59 130 246;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Dark theme colors */
+    --background: 17 24 39;
+    --foreground: 243 244 246;
+    --card: 31 41 55;
+    --card-foreground: 243 244 246;
+    --popover: 31 41 55;
+    --popover-foreground: 243 244 246;
+    --primary: 59 130 246;
+    --primary-foreground: 255 255 255;
+    --secondary: 55 65 81;
+    --secondary-foreground: 243 244 246;
+    --muted: 55 65 81;
+    --muted-foreground: 156 163 175;
+    --accent: 55 65 81;
+    --accent-foreground: 243 244 246;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --border: 75 85 99;
+    --input: 75 85 99;
+    --ring: 59 130 246;
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Utility classes using the CSS variables */
+@layer utilities {
+  .bg-background { background-color: rgb(var(--background)); }
+  .bg-foreground { background-color: rgb(var(--foreground)); }
+  .bg-card { background-color: rgb(var(--card)); }
+  .bg-card-foreground { background-color: rgb(var(--card-foreground)); }
+  .bg-popover { background-color: rgb(var(--popover)); }
+  .bg-popover-foreground { background-color: rgb(var(--popover-foreground)); }
+  .bg-primary { background-color: rgb(var(--primary)); }
+  .bg-primary-foreground { background-color: rgb(var(--primary-foreground)); }
+  .bg-secondary { background-color: rgb(var(--secondary)); }
+  .bg-secondary-foreground { background-color: rgb(var(--secondary-foreground)); }
+  .bg-muted { background-color: rgb(var(--muted)); }
+  .bg-muted-foreground { background-color: rgb(var(--muted-foreground)); }
+  .bg-accent { background-color: rgb(var(--accent)); }
+  .bg-accent-foreground { background-color: rgb(var(--accent-foreground)); }
+  .bg-destructive { background-color: rgb(var(--destructive)); }
+  .bg-destructive-foreground { background-color: rgb(var(--destructive-foreground)); }
+
+  .text-background { color: rgb(var(--background)); }
+  .text-foreground { color: rgb(var(--foreground)); }
+  .text-card { color: rgb(var(--card)); }
+  .text-card-foreground { color: rgb(var(--card-foreground)); }
+  .text-popover { color: rgb(var(--popover)); }
+  .text-popover-foreground { color: rgb(var(--popover-foreground)); }
+  .text-primary { color: rgb(var(--primary)); }
+  .text-primary-foreground { color: rgb(var(--primary-foreground)); }
+  .text-secondary { color: rgb(var(--secondary)); }
+  .text-secondary-foreground { color: rgb(var(--secondary-foreground)); }
+  .text-muted { color: rgb(var(--muted)); }
+  .text-muted-foreground { color: rgb(var(--muted-foreground)); }
+  .text-accent { color: rgb(var(--accent)); }
+  .text-accent-foreground { color: rgb(var(--accent-foreground)); }
+  .text-destructive { color: rgb(var(--destructive)); }
+  .text-destructive-foreground { color: rgb(var(--destructive-foreground)); }
+
+  .border-background { border-color: rgb(var(--background)); }
+  .border-foreground { border-color: rgb(var(--foreground)); }
+  .border-card { border-color: rgb(var(--card)); }
+  .border-card-foreground { border-color: rgb(var(--card-foreground)); }
+  .border-popover { border-color: rgb(var(--popover)); }
+  .border-popover-foreground { border-color: rgb(var(--popover-foreground)); }
+  .border-primary { border-color: rgb(var(--primary)); }
+  .border-primary-foreground { border-color: rgb(var(--primary-foreground)); }
+  .border-secondary { border-color: rgb(var(--secondary)); }
+  .border-secondary-foreground { border-color: rgb(var(--secondary-foreground)); }
+  .border-muted { border-color: rgb(var(--muted)); }
+  .border-muted-foreground { border-color: rgb(var(--muted-foreground)); }
+  .border-accent { border-color: rgb(var(--accent)); }
+  .border-accent-foreground { border-color: rgb(var(--accent-foreground)); }
+  .border-destructive { border-color: rgb(var(--destructive)); }
+  .border-destructive-foreground { border-color: rgb(var(--destructive-foreground)); }
+  .border-input { border-color: rgb(var(--input)); }
+
+  .ring-background { --tw-ring-color: rgb(var(--background)); }
+  .ring-foreground { --tw-ring-color: rgb(var(--foreground)); }
+  .ring-primary { --tw-ring-color: rgb(var(--primary)); }
+  .ring-secondary { --tw-ring-color: rgb(var(--secondary)); }
+  .ring-destructive { --tw-ring-color: rgb(var(--destructive)); }
+  .ring-ring { --tw-ring-color: rgb(var(--ring)); }
+
+  .ring-offset-background { --tw-ring-offset-color: rgb(var(--background)); }
+}
+
+/* Map specific z-index layers */
+.leaflet-container {
+  z-index: 1;
+}
+
+.leaflet-control-container {
+  z-index: 10;
+}
+
+/* Custom z-index layers for app components */
+@layer utilities {
+  .z-map-base { z-index: 1; }
+  .z-map-search { z-index: 20; }
+  .z-map-overlay { z-index: 30; }
+  .z-modal { z-index: 50; }
+  .z-toast { z-index: 60; }
+}
+
+/* Map search container styling */
+.map-search-container {
+  position: relative;
+}
+
+.map-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 25;
+}
+
+/* Bottom action bar - ensure it stays above map */
+.bottom-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30 !important;
+  pointer-events: none;
+}
+
+.bottom-action-bar > * {
+  pointer-events: auto;
+}
+
+/* Navigation bar */
+.navigation-bar {
+  position: relative;
+  z-index: 20;
+}
+
+/* Ensure modals are above everything and have proper backgrounds */
+[data-radix-dialog-overlay] {
+  z-index: 50 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+[data-radix-dialog-content] {
+  z-index: 51 !important;
+  background-color: rgb(var(--background)) !important;
+  border: 1px solid rgb(var(--border)) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Toast animations */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+/* Ensure input fields have visible backgrounds */
+input[type="email"],
+input[type="password"], 
+input[type="text"] {
+  background-color: rgb(var(--background)) !important;
+  border: 1px solid rgb(var(--input)) !important;
+  color: rgb(var(--foreground)) !important;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="text"]:focus {
+  outline: none !important;
+  ring: 2px solid rgb(var(--ring)) !important;
+  border-color: rgb(var(--ring)) !important;
+}
+
+/* Fixed button hover states - removing invalid rgba syntax */
+
+/* Enhanced hover states for Tailwind utility classes */
+.hover\:bg-primary\/90:hover {
+  background-color: rgb(59 130 246 / 0.9) !important;
+}
+
+.hover\:bg-accent:hover {
+  background-color: rgb(var(--accent)) !important;
+}
+
+.hover\:text-accent-foreground:hover {
+  color: rgb(var(--accent-foreground)) !important;
+}
+
+.hover\:bg-secondary\/80:hover {
+  background-color: rgb(243 244 246 / 0.8) !important;
+}
+
+.dark .hover\:bg-secondary\/80:hover {
+  background-color: rgb(55 65 81 / 0.8) !important;
+}
+
+.hover\:bg-destructive\/90:hover {
+  background-color: rgb(239 68 68 / 0.9) !important;
+}
