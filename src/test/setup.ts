@@ -55,6 +55,17 @@ const mockGeolocation = {
         altitudeAccuracy: null,
         heading: null,
         speed: null,
+        toJSON: function() {
+          return {
+            latitude: this.latitude,
+            longitude: this.longitude,
+            accuracy: this.accuracy,
+            altitude: this.altitude,
+            altitudeAccuracy: this.altitudeAccuracy,
+            heading: this.heading,
+            speed: this.speed
+          };
+        },
       },
       timestamp: Date.now(),
     }

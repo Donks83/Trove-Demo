@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, MapPin, Eye, Download, Edit, Trash2, Clock, Globe, Lock, Search, Filter } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -21,13 +21,7 @@ export default function DropsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterScope, setFilterScope] = useState<'all' | 'public' | 'private'>('all')
 
-  useEffect(() => {
-    if (user) {
-      fetchUserDrops()
-    }
-  }, [user])
-
-  const fetchUserDrops = async () => {
+  const fetchUserDrops = useCallback(async () => {
     if (!user || !firebaseUser) return
 
     setLoading(true)
@@ -63,7 +57,13 @@ export default function DropsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, firebaseUser, toast])
+
+  useEffect(() => {
+    if (user) {
+      fetchUserDrops()
+    }
+  }, [user, fetchUserDrops])
 
   const handleDeleteDrop = async (dropId: string) => {
     if (!user || !firebaseUser || !confirm('Are you sure you want to delete this drop? This action cannot be undone.')) {
