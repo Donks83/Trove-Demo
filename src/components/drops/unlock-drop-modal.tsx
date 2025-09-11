@@ -9,9 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/ui/toaster'
-import { unlockDropSchema } from '@/lib/validations'
+import { unlockDropSchema, type UnlockDropInput } from '@/lib/validations'
 import { formatDistance, getCompassDirection } from '@/lib/geo'
-import type { UnlockDropInput, Drop, UnlockDropResponse } from '@/types'
+import type { Drop, UnlockDropResponse } from '@/types'
 import { cn } from '@/lib/utils'
 
 interface UnlockDropModalProps {
@@ -58,7 +58,7 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
             form.setValue('userCoords', { lat: latitude, lng: longitude })
           },
           (error) => {
-            setLocationError(error.message)
+            setLocationError(error instanceof GeolocationPositionError ? error.message : 'Location error')
             setUserLocation(null)
           },
           {
