@@ -187,8 +187,7 @@ export default function Map({ onMapClick, selectedLocation, unearthLocation, dro
         attributionControl={false} // Hide attribution
       >
         <TileLayer
-          url="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token={accessToken}"
-          accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''}
+          url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''}`}
           attribution=""
         />
         
