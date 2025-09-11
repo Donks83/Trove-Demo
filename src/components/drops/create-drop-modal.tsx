@@ -133,7 +133,7 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, onSuccess }
           token = 'dev-token-' + user.uid + '-' + Date.now()
           console.log('Using development fallback token')
         } else {
-          throw new Error(`Failed to get auth token: ${tokenError.message}`)
+          throw new Error(`Failed to get auth token: ${tokenError instanceof Error ? tokenError.message : 'Unknown error'}`)
         }
       }
       
