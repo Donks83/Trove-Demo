@@ -321,7 +321,7 @@ export function MapView({ className }: MapViewProps) {
           setSelectedDrop(null)
           setUnearthResult(null)
         }}
-        drop={selectedDrop}
+        drop={selectedDrop || undefined}
         unlockResult={unearthResult}
       />
 
