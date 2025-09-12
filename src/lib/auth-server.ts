@@ -5,6 +5,8 @@ import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import type { User } from '@/types'
 
+// Force redeploy - testing Firebase Admin auth fix
+
 // Initialize Firebase Admin
 if (getApps().length === 0) {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
