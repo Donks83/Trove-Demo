@@ -208,6 +208,7 @@ async function createDrop(dropData: typeof DEMO_DROPS[0], ownerId: string): Prom
       coords,
       geofenceRadiusM: dropData.geofenceRadiusM,
       scope: dropData.scope,
+      dropType: dropData.scope, // Use scope as dropType for seed data
       expiresAt: Timestamp.fromDate(expiresAt),
       storagePath,
       retrievalMode: dropData.retrievalMode,

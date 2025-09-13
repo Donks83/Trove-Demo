@@ -14,6 +14,9 @@ export const createDropSchema = z.object({
   coords: coordinatesSchema,
   geofenceRadiusM: z.number().min(1).max(10000),
   scope: z.enum(['public', 'private']),
+  dropType: z.enum(['private', 'public', 'hunt']),
+  huntCode: z.string().optional(),
+  huntDifficulty: z.enum(['beginner', 'intermediate', 'expert', 'master']).optional(),
   expiresAt: z.date().optional(),
   retrievalMode: z.enum(['remote', 'physical']),
 })
