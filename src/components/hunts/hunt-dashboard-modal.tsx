@@ -140,7 +140,7 @@ function HuntCard({ hunt }: { hunt: TreasureHunt }) {
         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
           <Calendar className="w-4 h-4" />
           <span>
-            {new Date(hunt.startDate).toLocaleDateString()} - {new Date(hunt.endDate).toLocaleDateString()}
+            {hunt.startDate?.toDate().toLocaleDateString()} - {hunt.endDate?.toDate().toLocaleDateString()}
           </span>
         </div>
       )}
