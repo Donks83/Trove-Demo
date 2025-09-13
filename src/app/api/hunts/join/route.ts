@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminDb } from '@/lib/firebase'
 import { verifyAuthToken } from '@/lib/auth-server'
+import { demoDropsStore } from '@/lib/demo-storage'
 import type { JoinHuntByCodeRequest, JoinHuntByCodeResponse } from '@/types'
 import { isValidHuntCode } from '@/lib/hunt-permissions'
 
@@ -25,15 +25,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find the drop with this hunt code
-    const dropsRef = adminDb.collection('drops')
-    const huntQuery = await dropsRef
-      .where('huntCode', '==', body.huntCode)
-      .where('dropType', '==', 'hunt')
-      .limit(1)
-      .get()
+    // Find the drop with this hunt code in demo storage
+    const huntDrop = demoDropsStore.find(drop => 
+      drop.huntCode === body.huntCode && drop.dropType === 'hunt'
+    )
 
-    if (huntQuery.empty) {
+    if (!huntDrop) {
       return NextResponse.json(
         { 
           success: false, 
@@ -44,11 +41,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const huntDrop = huntQuery.docs[0]
-    const huntData = huntDrop.data()
-
     // Check if hunt has expired
-    if (huntData.expiresAt && huntData.expiresAt.toDate() < new Date()) {
+    if (huntDrop.expiresAt && new Date(huntDrop.expiresAt) < new Date()) {
       return NextResponse.json(
         {
           success: false,
@@ -59,48 +53,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user document
-    const userRef = adminDb.collection('users').doc(user.uid)
-    const userDoc = await userRef.get()
-    
-    if (!userDoc.exists) {
-      return NextResponse.json(
-        { success: false, error: 'User not found' } as JoinHuntByCodeResponse,
-        { status: 404 }
-      )
+    // For demo purposes, simulate successful join
+    // In production, this would update the user's joinedHunts array in the database
+    console.log(`User ${user.uid} joining hunt with code: ${body.huntCode}`)
+
+    // Simulate updating drop stats
+    huntDrop.stats = {
+      ...huntDrop.stats,
+      views: (huntDrop.stats?.views || 0) + 1,
+      lastAccessedAt: new Date()
     }
-
-    const userData = userDoc.data()
-    const currentJoinedHunts = userData?.joinedHunts || []
-
-    // Check if already joined this hunt
-    if (currentJoinedHunts.includes(body.huntCode)) {
-      return NextResponse.json(
-        {
-          success: true,
-          message: 'Already joined this hunt!',
-          drop: {
-            id: huntDrop.id,
-            title: huntData.title,
-            description: huntData.description,
-            difficulty: huntData.huntDifficulty || 'intermediate'
-          }
-        } as JoinHuntByCodeResponse,
-        { status: 200 }
-      )
-    }
-
-    // Add hunt code to user's joined hunts
-    await userRef.update({
-      joinedHunts: [...currentJoinedHunts, body.huntCode],
-      updatedAt: new Date()
-    })
-
-    // Increment drop stats (optional)
-    await huntDrop.ref.update({
-      'stats.views': (huntData.stats?.views || 0) + 1,
-      'stats.lastAccessedAt': new Date()
-    })
 
     return NextResponse.json(
       {
@@ -108,9 +70,9 @@ export async function POST(request: NextRequest) {
         message: 'Successfully joined the hunt!',
         drop: {
           id: huntDrop.id,
-          title: huntData.title,
-          description: huntData.description,
-          difficulty: huntData.huntDifficulty || 'intermediate'
+          title: huntDrop.title,
+          description: huntDrop.description,
+          difficulty: huntDrop.huntDifficulty || 'intermediate'
         }
       } as JoinHuntByCodeResponse,
       { status: 200 }

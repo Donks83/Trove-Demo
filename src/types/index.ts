@@ -36,7 +36,7 @@ export interface User {
   displayName: string
   photoURL?: string
   tier: UserTier
-  joinedHunts: string[] // Array of hunt codes the user has joined
+  joinedHunts?: string[] // Array of hunt codes the user has joined (optional for demo)
   createdAt: Timestamp
   updatedAt: Timestamp
 }

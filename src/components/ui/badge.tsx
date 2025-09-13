@@ -1,1 +1,23 @@
-import { cn } from '@/lib/utils'\n\ninterface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {\n  variant?: 'default' | 'secondary' | 'destructive' | 'outline'\n}\n\nexport function Badge({ className, variant = 'default', ...props }: BadgeProps) {\n  return (\n    <div\n      className={cn(\n        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',\n        {\n          'bg-primary text-primary-foreground hover:bg-primary/80': variant === 'default',\n          'bg-secondary text-secondary-foreground hover:bg-secondary/80': variant === 'secondary',\n          'bg-destructive text-destructive-foreground hover:bg-destructive/80': variant === 'destructive',\n          'text-foreground': variant === 'outline',\n        },\n        className\n      )}\n      {...props}\n    />\n  )\n}"
+import { cn } from '@/lib/utils'
+
+interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'secondary' | 'destructive' | 'outline'
+}
+
+export function Badge({ className, variant = 'default', ...props }: BadgeProps) {
+  return (
+    <div
+      className={cn(
+        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+        {
+          'bg-primary text-primary-foreground hover:bg-primary/80': variant === 'default',
+          'bg-secondary text-secondary-foreground hover:bg-secondary/80': variant === 'secondary',
+          'bg-destructive text-destructive-foreground hover:bg-destructive/80': variant === 'destructive',
+          'text-foreground': variant === 'outline',
+        },
+        className
+      )}
+      {...props}
+    />
+  )
+}

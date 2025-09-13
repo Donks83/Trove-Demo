@@ -30,7 +30,10 @@ export function canShowProximityHints(drop: Drop, user: User | null): ProximityP
         result.canShowHints = false
         result.userHasPermission = false
       } else {
-        const hasJoinedHunt = user.joinedHunts?.includes(drop.huntCode) || false
+        // For demo purposes, simulate that signed-in users have joined demo hunts
+        // In production, this would check user.joinedHunts?.includes(drop.huntCode)
+        const demoHuntCodes = ['HUNT-COFFEE-2024', 'HUNT-BRIDGE-EXPERT', 'HUNT-BEGINNER-2024']
+        const hasJoinedHunt = demoHuntCodes.includes(drop.huntCode)
         result.canShowHints = hasJoinedHunt
         result.userHasPermission = hasJoinedHunt
       }
@@ -51,12 +54,11 @@ export function canShowProximityHints(drop: Drop, user: User | null): ProximityP
 export function canJoinHunt(huntCode: string, user: User | null): boolean {
   if (!user || !huntCode) return false
   
-  // Check if already joined
-  if (user.joinedHunts?.includes(huntCode)) {
-    return false // Already joined
-  }
+  // For demo purposes, allow joining any valid hunt code
+  // In production, this would check if user already joined: user.joinedHunts?.includes(huntCode)
+  const demoHuntCodes = ['HUNT-COFFEE-2024', 'HUNT-BRIDGE-EXPERT', 'HUNT-BEGINNER-2024']
   
-  return true // Can join
+  return demoHuntCodes.includes(huntCode)
 }
 
 /**
