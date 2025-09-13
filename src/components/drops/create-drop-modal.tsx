@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useDropzone } from 'react-dropzone'
-import { X, Upload, MapPin, Clock, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { X, Upload, MapPin, Clock, Eye, EyeOff, AlertCircle, Users, Crown, QrCode, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -20,15 +20,22 @@ interface CreateDropModalProps {
   isOpen: boolean
   onClose: () => void
   selectedLocation: { lat: number; lng: number } | null
+  selectedRadius?: number
   onSuccess?: (drop: any) => void
 }
 
-export function CreateDropModal({ isOpen, onClose, selectedLocation, onSuccess }: CreateDropModalProps) {
+export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRadius = 50, onSuccess }: CreateDropModalProps) {
   const { user, firebaseUser } = useAuth()
   const { toast } = useToast()
   const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
   const [showSecret, setShowSecret] = useState(false)
+  const [dropType, setDropType] = useState<'private' | 'public' | 'hunt'>('private')
+  const [showHuntForm, setShowHuntForm] = useState(false)
+  const [huntCode, setHuntCode] = useState<string>('')
+  const [huntQRCode, setHuntQRCode] = useState<string>('')
+  const [huntDifficulty, setHuntDifficulty] = useState<'beginner' | 'intermediate' | 'expert' | 'master'>('beginner')
+  const [copiedCode, setCopiedCode] = useState(false)
 
   const tierLimits = user ? getTierLimits(user.tier) : getTierLimits('free')
 
@@ -39,11 +46,56 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, onSuccess }
       description: '',
       secret: '',
       coords: selectedLocation || { lat: 0, lng: 0 },
-      geofenceRadiusM: tierLimits.minRadiusM,
-      scope: 'public',
+      geofenceRadiusM: selectedRadius,
+      scope: 'private',
+      dropType: 'private',
       retrievalMode: 'remote',
     },
   })
+
+  // Generate hunt code when hunt type is selected
+  const generateHuntCode = () => {
+    const timestamp = Date.now().toString(36).toUpperCase()
+    const random = Math.random().toString(36).substr(2, 4).toUpperCase()
+    const newCode = `HUNT-${timestamp}-${random}`
+    setHuntCode(newCode)
+    
+    // Generate QR code URL (you could use a QR code library or service)
+    const baseUrl = window.location.origin
+    const qrUrl = `${baseUrl}/join-hunt?code=${newCode}`
+    setHuntQRCode(qrUrl)
+  }
+
+  // Copy hunt code to clipboard
+  const copyHuntCode = async () => {
+    try {
+      await navigator.clipboard.writeText(huntCode)
+      setCopiedCode(true)
+      toast({
+        title: 'Hunt code copied!',
+        description: 'Share this code with participants to join the hunt.',
+      })
+      setTimeout(() => setCopiedCode(false), 2000)
+    } catch (error) {
+      toast({
+        title: 'Copy failed',
+        description: 'Please copy the code manually.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // Update form when drop type changes
+  useEffect(() => {
+    form.setValue('dropType', dropType)
+    if (dropType === 'hunt') {
+      form.setValue('scope', 'private')
+      form.setValue('retrievalMode', 'physical')
+      if (!huntCode) {
+        generateHuntCode()
+      }
+    }
+  }, [dropType, form, huntCode])
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const totalSize = acceptedFiles.reduce((sum, file) => sum + file.size, 0)
@@ -104,34 +156,28 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, onSuccess }
       formData.append('lng', selectedLocation.lng.toString())
       formData.append('geofenceRadiusM', data.geofenceRadiusM.toString())
       formData.append('scope', data.scope)
+      formData.append('dropType', data.dropType)
       formData.append('retrievalMode', data.retrievalMode)
       if (data.expiresAt) formData.append('expiresAt', data.expiresAt.toISOString())
+      
+      // Add hunt-specific data
+      if (dropType === 'hunt') {
+        formData.append('huntCode', huntCode)
+        formData.append('huntDifficulty', huntDifficulty)
+      }
 
       files.forEach((file) => {
         formData.append('files', file)
       })
 
-      // Get auth token with better debugging
-      console.log('User object:', user)
-      console.log('Firebase user:', firebaseUser)
-      
-      if (!firebaseUser) {
-        throw new Error('No Firebase user found - please sign in again')
-      }
-      
+      // Get auth token
       let token
       try {
-        token = await firebaseUser.getIdToken(true) // Force refresh
-        console.log('Token retrieved successfully:', token ? 'Yes' : 'No')
+        token = await firebaseUser.getIdToken(true)
       } catch (tokenError) {
         console.error('Error getting token:', tokenError)
-        
-        // In development, if Firebase emulator is having issues, try a fallback
         if (process.env.NODE_ENV === 'development') {
-          console.log('Development mode: attempting fallback auth')
-          // Create a minimal token for development
           token = 'dev-token-' + user.uid + '-' + Date.now()
-          console.log('Using development fallback token')
         } else {
           throw new Error(`Failed to get auth token: ${tokenError instanceof Error ? tokenError.message : 'Unknown error'}`)
         }
@@ -157,14 +203,21 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, onSuccess }
       const result = await response.json()
 
       toast({
-        title: 'Drop created!',
-        description: result.message || 'Your files have been buried at this location.',
+        title: dropType === 'hunt' ? 'Treasure hunt created!' : 'Drop created!',
+        description: dropType === 'hunt' 
+          ? `Your treasure hunt has been created! Share code: ${huntCode}`
+          : result.message || 'Your files have been buried at this location.',
       })
 
       onSuccess?.(result.drop)
       onClose()
       form.reset()
       setFiles([])
+      setHuntCode('')
+      setHuntQRCode('')
+      setDropType('private')
+      setShowHuntForm(false)
+      setHuntDifficulty('beginner')
     } catch (error: any) {
       toast({
         title: 'Failed to create drop',
@@ -178,24 +231,204 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, onSuccess }
 
   const totalFileSize = files.reduce((sum, file) => sum + file.size, 0) / (1024 * 1024)
   const radiusValue = form.watch('geofenceRadiusM')
-  const scope = form.watch('scope')
-  const retrievalMode = form.watch('retrievalMode')
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Bury Files</DialogTitle>
+          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+            {dropType === 'hunt' && <Crown className="w-6 h-6 text-purple-600" />}
+            {dropType === 'hunt' ? 'Create Treasure Hunt' : 'Bury Files'}
+          </DialogTitle>
         </DialogHeader>
         <div className="text-gray-600 dark:text-gray-400 mb-4">
-          Create a new drop at {selectedLocation?.lat.toFixed(6)}, {selectedLocation?.lng.toFixed(6)}
+          Create a new {dropType === 'hunt' ? 'treasure hunt' : 'drop'} at {selectedLocation?.lat.toFixed(6)}, {selectedLocation?.lng.toFixed(6)}
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Drop Type Selection */}
+          <div className="space-y-4">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Drop Type
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => setDropType('private')}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  dropType === 'private'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-sm">Private</div>
+                    <div className="text-xs text-gray-500">Secure sharing</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setDropType('public')}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  dropType === 'public'
+                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <Users className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-sm">Public</div>
+                    <div className="text-xs text-gray-500">Open sharing</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setDropType('hunt')}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  dropType === 'hunt'
+                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                    : 'border-gray-200 hover:border-gray-300'
+                } ${
+                  user?.tier === 'free' ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+                disabled={user?.tier === 'free'}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                    <Crown className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-sm">Hunt</div>
+                    <div className="text-xs text-gray-500">
+                      {user?.tier === 'free' ? 'Premium only' : 'Gamified'}
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </div>
+            
+            {/* Drop type descriptions */}
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-sm">
+              {dropType === 'private' && (
+                <div>
+                  <strong>Private drops</strong> are only accessible with exact coordinates and secret phrase. 
+                  Zero proximity hints - maximum security for confidential documents.
+                </div>
+              )}
+              {dropType === 'public' && (
+                <div>
+                  <strong>Public drops</strong> are visible on the map for anyone to discover. 
+                  No proximity hints - users must find them by exploring the map.
+                </div>
+              )}
+              {dropType === 'hunt' && (
+                <div>
+                  <strong>Hunt drops</strong> create gamified experiences with proximity hints for invited participants only. 
+                  Perfect for team building and interactive adventures.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Hunt Configuration - only show if hunt type selected */}
+          {dropType === 'hunt' && (
+            <div className="space-y-4 p-4 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200 dark:border-purple-800">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-purple-900 dark:text-purple-100">Hunt Code & Settings</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowHuntForm(!showHuntForm)}
+                  className="text-purple-600 hover:text-purple-800 text-sm"
+                >
+                  {showHuntForm ? 'Hide' : 'Configure'}
+                </button>
+              </div>
+
+              {/* Hunt Code Display */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-purple-900 dark:text-purple-100 mb-2">
+                    Hunt Code (Share with participants)
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={huntCode}
+                      readOnly
+                      className="bg-white dark:bg-purple-900/20 border-purple-300 font-mono text-center font-semibold"
+                    />
+                    <Button
+                      type="button"
+                      onClick={copyHuntCode}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copiedCode ? 'Copied!' : 'Copy'}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={generateHuntCode}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <QrCode className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-purple-600 dark:text-purple-300 mt-1">
+                    Participants enter this code to join the hunt and get proximity hints
+                  </p>
+                </div>
+
+                {huntQRCode && (
+                  <div className="text-center">
+                    <p className="text-xs text-purple-600 dark:text-purple-300 mb-2">
+                      QR Code URL: {huntQRCode}
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              {showHuntForm && (
+                <div className="space-y-4 pt-4 border-t border-purple-200 dark:border-purple-700">
+                  <div>
+                    <label className="block text-sm font-medium text-purple-900 dark:text-purple-100 mb-1">
+                      Difficulty Level
+                    </label>
+                    <select 
+                      value={huntDifficulty}
+                      onChange={(e) => setHuntDifficulty(e.target.value as typeof huntDifficulty)}
+                      className="w-full px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white dark:bg-purple-900/20"
+                    >
+                      <option value="beginner">🟢 Beginner (100m+ radius, strong hints)</option>
+                      <option value="intermediate">🟡 Intermediate (50m radius, moderate hints)</option>
+                      <option value="expert">🟠 Expert (25m radius, minimal hints)</option>
+                      <option value="master">🔴 Master (exact coordinates required)</option>
+                    </select>
+                    <p className="text-xs text-purple-600 dark:text-purple-300 mt-1">
+                      Controls how precise hunters need to be and hint strength
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* File Upload */}
           <div className="space-y-4">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Files to bury
+              {dropType === 'hunt' ? 'Treasure files to hide' : 'Files to bury'}
             </label>
             
             <div
@@ -249,10 +482,10 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, onSuccess }
           {/* Title */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Title *
+              {dropType === 'hunt' ? 'Hunt title (clue description)' : 'Title'} *
             </label>
             <Input
-              placeholder="Enter drop title..."
+              placeholder={dropType === 'hunt' ? 'e.g., Find the coffee machine treasure!' : 'Enter drop title...'}
               {...form.register('title')}
             />
             {form.formState.errors.title && (
@@ -263,10 +496,10 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, onSuccess }
           {/* Description */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Description
+              {dropType === 'hunt' ? 'Clue description' : 'Description'}
             </label>
             <textarea
-              placeholder="Optional description..."
+              placeholder={dropType === 'hunt' ? 'Give hunters a hint about this location...' : 'Optional description...'}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
               rows={3}
               {...form.register('description')}
@@ -284,45 +517,89 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, onSuccess }
             <div className="relative">
               <Input
                 type={showSecret ? 'text' : 'password'}
-                placeholder="Enter secret phrase..."
+                placeholder={dropType === 'hunt' ? 'e.g., coffee time' : 'Enter secret phrase...'}
                 className="pr-10"
                 autoComplete="new-password"
+                data-lpignore="true"
                 {...form.register('secret')}
               />
               <button
                 type="button"
                 onClick={() => setShowSecret(!showSecret)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
                 {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
             <p className="text-xs text-gray-500">
-              This phrase will be required to unlock your drop
+              {dropType === 'hunt' 
+                ? 'This phrase will be shared with hunt participants' 
+                : 'This phrase will be required to unlock your drop'
+              }
             </p>
             {form.formState.errors.secret && (
               <p className="text-sm text-red-600">{form.formState.errors.secret.message}</p>
             )}
           </div>
 
-          {/* Geofence Radius */}
-          <div className="space-y-2">
+          {/* Geofence Radius with Slider */}
+          <div className="space-y-4">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Precision radius
+              Precision radius: {formatDistance(radiusValue)}
             </label>
+            
+            {/* Slider */}
+            <div className="space-y-2">
+              <input
+                type="range"
+                min={tierLimits.minRadiusM}
+                max={tierLimits.maxRadiusM}
+                step="5"
+                value={radiusValue}
+                onChange={(e) => form.setValue('geofenceRadiusM', parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+              />
+              
+              {/* Slider labels */}
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Precise</span>
+                <span>Flexible</span>
+              </div>
+              
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>{formatDistance(tierLimits.minRadiusM)}</span>
+                <span>{formatDistance(tierLimits.maxRadiusM)}</span>
+              </div>
+            </div>
+
+            {/* Manual input as backup */}
             <div className="flex items-center space-x-4">
               <Input
                 type="number"
                 min={tierLimits.minRadiusM}
                 max={tierLimits.maxRadiusM}
-                {...form.register('geofenceRadiusM', { valueAsNumber: true })}
+                step="5"
+                value={radiusValue}
+                onChange={(e) => form.setValue('geofenceRadiusM', parseInt(e.target.value) || tierLimits.minRadiusM)}
                 className="w-24"
               />
               <span className="text-sm text-gray-500">meters</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                ({formatDistance(radiusValue)} radius)
-              </span>
             </div>
+            
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-blue-900 dark:text-blue-100">Radius Guide</p>
+                  <p className="text-blue-700 dark:text-blue-300 mt-1">
+                    • <strong>10-25m</strong>: Room/building precision
+                    <br />• <strong>50-100m</strong>: City block accuracy  
+                    <br />• <strong>200m+</strong>: General area access
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             <p className="text-xs text-gray-500">
               Range: {formatDistance(tierLimits.minRadiusM)} - {formatDistance(tierLimits.maxRadiusM)} for {user?.tier} tier
             </p>
@@ -331,73 +608,78 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, onSuccess }
             )}
           </div>
 
-          {/* Scope */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Visibility
-            </label>
-            <div className="flex space-x-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="public"
-                  {...form.register('scope')}
-                  className="text-primary"
-                />
-                <span className="text-sm">Public (visible on map)</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="private"
-                  {...form.register('scope')}
-                  className="text-primary"
-                  disabled={!tierLimits.canUsePrivateSpots}
-                />
-                <span className={cn(
-                  'text-sm',
-                  !tierLimits.canUsePrivateSpots && 'text-gray-400'
-                )}>
-                  Private (direct link only)
-                  {!tierLimits.canUsePrivateSpots && ' (Premium+)'}
-                </span>
-              </label>
-            </div>
-          </div>
+          {/* Only show scope and retrieval options for non-hunt drops */}
+          {dropType !== 'hunt' && (
+            <>
+              {/* Scope */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Visibility
+                </label>
+                <div className="flex space-x-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      value="public"
+                      {...form.register('scope')}
+                      className="text-primary"
+                    />
+                    <span className="text-sm">Public (visible on map)</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      value="private"
+                      {...form.register('scope')}
+                      className="text-primary"
+                      disabled={!tierLimits.canUsePrivateSpots}
+                    />
+                    <span className={cn(
+                      'text-sm',
+                      !tierLimits.canUsePrivateSpots && 'text-gray-400'
+                    )}>
+                      Private (direct link only)
+                      {!tierLimits.canUsePrivateSpots && ' (Premium+)'}
+                    </span>
+                  </label>
+                </div>
+              </div>
 
-          {/* Retrieval Mode */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Unlock mode
-            </label>
-            <div className="flex space-x-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="remote"
-                  {...form.register('retrievalMode')}
-                  className="text-primary"
-                />
-                <span className="text-sm">Remote (any location)</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="physical"
-                  {...form.register('retrievalMode')}
-                  className="text-primary"
-                  disabled={!tierLimits.canUsePhysicalMode}
-                />
-                <span className={cn(
-                  'text-sm',
-                  !tierLimits.canUsePhysicalMode && 'text-gray-400'
-                )}>
-                  Physical only (must be at location)
-                  {!tierLimits.canUsePhysicalMode && ' (Premium+)'}
-                </span>
-              </label>
-            </div>
-          </div>
+              {/* Retrieval Mode */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Unlock mode
+                </label>
+                <div className="flex space-x-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      value="remote"
+                      {...form.register('retrievalMode')}
+                      className="text-primary"
+                    />
+                    <span className="text-sm">Remote (any location)</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      value="physical"
+                      {...form.register('retrievalMode')}
+                      className="text-primary"
+                      disabled={!tierLimits.canUsePhysicalMode}
+                    />
+                    <span className={cn(
+                      'text-sm',
+                      !tierLimits.canUsePhysicalMode && 'text-gray-400'
+                    )}>
+                      Physical only (must be at location)
+                      {!tierLimits.canUsePhysicalMode && ' (Premium+)'}
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Expiry */}
           <div className="space-y-2">
@@ -440,7 +722,11 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, onSuccess }
               disabled={uploading || files.length === 0 || !selectedLocation}
               className="flex-1"
             >
-              {uploading ? 'Creating...' : 'Bury Drop'}
+              {uploading ? (
+                dropType === 'hunt' ? 'Creating Hunt...' : 'Creating...'
+              ) : (
+                dropType === 'hunt' ? 'Create Hunt' : 'Bury Drop'
+              )}
             </Button>
           </div>
         </form>

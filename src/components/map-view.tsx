@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { Search, Settings, Upload, Lock, Plus, X } from 'lucide-react'
+import { Search, Settings, Upload, Lock, Plus, X, MapPin, Crown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Navigation } from '@/components/navigation'
 import { CreateDropModal } from '@/components/drops/create-drop-modal'
 import { UnlockDropModal } from '@/components/drops/unlock-drop-modal'
 import { UnearthPopup } from '@/components/drops/unearth-popup'
+import { JoinHuntModal } from '@/components/hunts/join-hunt-modal'
 import { useAuth } from '@/components/auth-provider'
+import { searchLocations, type SearchResult } from '@/lib/geocoding/mapbox-geocoder'
 import { cn } from '@/lib/utils'
 import type { Drop, UnlockDropResponse } from '@/types'
 
@@ -36,10 +38,16 @@ export function MapView({ className }: MapViewProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showUnlockModal, setShowUnlockModal] = useState(false)
   const [showUnearthPopup, setShowUnearthPopup] = useState(false)
+  const [showJoinHuntModal, setShowJoinHuntModal] = useState(false)
   const [unearthResult, setUnearthResult] = useState<any>(null)
   const [selectedDrop, setSelectedDrop] = useState<Partial<Drop> | null>(null)
   const [drops, setDrops] = useState<Partial<Drop>[]>([])
   const [loading, setLoading] = useState(false)
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [showSearchResults, setShowSearchResults] = useState(false)
+  const [selectedRadius, setSelectedRadius] = useState(50) // Default radius
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Fetch public drops when component mounts
   useEffect(() => {
@@ -107,6 +115,8 @@ export function MapView({ className }: MapViewProps) {
       setDrops(prev => [...prev, newDrop])
     }
     setSelectedLocation(null)
+    // Reset radius to default after creating drop
+    setSelectedRadius(50)
   }
 
   const handleUnearthSuccess = (result: UnlockDropResponse) => {
@@ -135,6 +145,44 @@ export function MapView({ className }: MapViewProps) {
     setUnearthLocation(null)
   }
 
+  // Search functionality
+  const handleSearchChange = async (value: string) => {
+    setSearchQuery(value)
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    
+    if (!value.trim()) {
+      setSearchResults([])
+      setShowSearchResults(false)
+      return
+    }
+    
+    setSearchLoading(true)
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await searchLocations(value, 5)
+        setSearchResults(results)
+        setShowSearchResults(true)
+      } catch (error) {
+        console.error('Search error:', error)
+        setSearchResults([])
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 300) // Debounce search requests
+  }
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    // You can implement map navigation here
+    // For now, we'll just show the location in console
+    console.log('Navigate to:', result)
+    setSearchQuery(result.name)
+    setShowSearchResults(false)
+    // TODO: Add map.flyTo() functionality
+  }
+
   return (
     <div className={cn('relative w-full h-full flex flex-col', className)}>
       {/* Navigation */}
@@ -145,9 +193,11 @@ export function MapView({ className }: MapViewProps) {
         <Map
           onMapClick={handleMapClick}
           selectedLocation={mode === 'bury' ? selectedLocation : null}
+          selectedRadius={selectedRadius}
           unearthLocation={mode === 'unearth' ? unearthLocation : null}
           drops={drops}
           onDropClick={handleDropClick}
+          mode={mode}
           className="w-full h-full"
         />
 
@@ -206,39 +256,98 @@ export function MapView({ className }: MapViewProps) {
                   type="text"
                   placeholder="Search locations..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  autoComplete="off"
+                  data-lpignore="true"
                   className="pl-10 pr-10 py-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-0 shadow-lg focus:ring-2 focus:ring-primary w-64"
                 />
                 {searchQuery && (
                   <button
-                    onClick={() => setSearchQuery('')}
+                    onClick={() => {
+                      setSearchQuery('')
+                      setSearchResults([])
+                      setShowSearchResults(false)
+                    }}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 )}
                 {/* Search results */}
-                {searchQuery && (
-                  <div className="map-search-results bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-                    <div className="p-3">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                        Search results for "{searchQuery}"
+                {showSearchResults && (searchResults.length > 0 || searchLoading) && (
+                  <div className="map-search-results bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto absolute top-full left-0 right-0 z-50">
+                    {searchLoading ? (
+                      <div className="p-3 flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                        <span className="text-sm text-gray-500">Searching...</span>
                       </div>
-                      <div className="space-y-2">
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          🔍 Location search coming soon!
-                        </div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500">
-                          For now, click on the map to place drops at specific locations.
-                        </div>
+                    ) : (
+                      <div className="py-2">
+                        {searchResults.map((result) => (
+                          <button
+                            key={result.id}
+                            onClick={() => handleSearchResultClick(result)}
+                            className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 flex items-start gap-2"
+                          >
+                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                {result.name}
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                {result.description}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Radius Control Widget - shows when location is selected in bury mode */}
+        {mode === 'bury' && selectedLocation && (
+          <div className="absolute top-20 right-4 z-[1000] bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-lg max-w-xs">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <h3 className="font-medium text-gray-900 dark:text-white">Drop Radius</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Precision:</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  {selectedRadius}m
+                </span>
+              </div>
+              
+              <input
+                type="range"
+                min="10"
+                max="500"
+                step="5"
+                value={selectedRadius}
+                onChange={(e) => setSelectedRadius(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+              />
+              
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>10m</span>
+                <span>500m</span>
+              </div>
+              
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {selectedRadius <= 25 && '🏢 Building precision'}
+                {selectedRadius > 25 && selectedRadius <= 100 && '🏙️ City block accuracy'}
+                {selectedRadius > 100 && '🗺️ General area access'}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Bottom Action Bar */}
         <div className="bottom-action-bar p-4">
@@ -255,14 +364,14 @@ export function MapView({ className }: MapViewProps) {
                 )}
                 <span className="text-sm text-gray-600 dark:text-gray-300">
                   {!user 
-                    ? 'Sign in to create drops'
+                    ? 'Sign in to create drops and start treasure hunting! 🏴‍☠️'
                     : mode === 'bury'
                       ? selectedLocation 
-                        ? 'Pin dropped! Click upload to bury files here.' 
-                        : 'BURY MODE: Click anywhere on the map to place a drop. 🎯 Try unlocking test drops: &quot;test123&quot;, &quot;location123&quot;, or &quot;Fake Believe&quot;'
+                        ? '📍 Pin placed! Click "Bury Files" to upload and hide your treasure.' 
+                        : '🎯 BURY MODE: Click anywhere on the map to place a drop. Private/Public drops give NO hints. Only Hunt drops provide proximity hints to code holders.'
                       : unearthLocation
-                        ? 'Enter the secret phrase to unearth files at this location.'
-                        : 'UNEARTH MODE: Click anywhere on the map to search for buried files. Try: London (&quot;test123&quot;), North England (&quot;Fake Believe&quot;)'
+                        ? '🔍 Enter the secret phrase to unearth files at this location. Good luck, treasure hunter!'
+                        : '🗺️ UNEARTH MODE: Click anywhere on the map to search for buried files. Join treasure hunts for proximity hints!'
                   }
                 </span>
               </div>
@@ -270,6 +379,15 @@ export function MapView({ className }: MapViewProps) {
               <div className="flex gap-2">
                 {mode === 'bury' ? (
                   <>
+                    <Button
+                      onClick={() => setShowJoinHuntModal(true)}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                      disabled={!user}
+                    >
+                      <Crown className="w-4 h-4" />
+                      Join Hunt
+                    </Button>
                     <Button
                       onClick={() => setShowUnlockModal(true)}
                       variant="outline"
@@ -288,15 +406,26 @@ export function MapView({ className }: MapViewProps) {
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    onClick={() => setShowUnlockModal(true)}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                    disabled={!user}
-                  >
-                    <Lock className="w-4 h-4" />
-                    Unlock by Drop
-                  </Button>
+                  <>
+                    <Button
+                      onClick={() => setShowJoinHuntModal(true)}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                      disabled={!user}
+                    >
+                      <Crown className="w-4 h-4" />
+                      Join Hunt
+                    </Button>
+                    <Button
+                      onClick={() => setShowUnlockModal(true)}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                      disabled={!user}
+                    >
+                      <Lock className="w-4 h-4" />
+                      Unlock by Drop
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
@@ -311,6 +440,7 @@ export function MapView({ className }: MapViewProps) {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         selectedLocation={selectedLocation}
+        selectedRadius={selectedRadius}
         onSuccess={handleDropCreated}
       />
 
@@ -330,6 +460,11 @@ export function MapView({ className }: MapViewProps) {
         location={unearthLocation}
         onClose={handleUnearthClose}
         onSuccess={handleUnearthSuccess}
+      />
+
+      <JoinHuntModal
+        isOpen={showJoinHuntModal}
+        onClose={() => setShowJoinHuntModal(false)}
       />
     </div>
   )

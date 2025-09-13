@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MapPin, Search, X, Lock } from 'lucide-react'
+import { MapPin, Search, X, Lock, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/components/auth-provider'
@@ -20,6 +20,7 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
   const { toast } = useToast()
   const [secret, setSecret] = useState('')
   const [searching, setSearching] = useState(false)
+  const [showSecret, setShowSecret] = useState(false)
 
   if (!isVisible || !location) return null
 
@@ -77,9 +78,23 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
         setSecret('')
       }
     } catch (error: any) {
+      console.error('Unearth error:', error)
+      
+      let errorMessage = 'No files found at this location with that secret phrase.'
+      
+      if (error.message) {
+        if (error.message.includes('Authentication')) {
+          errorMessage = 'Please sign in to search for buried files.'
+        } else if (error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.'
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
       toast({
         title: 'Nothing found',
-        description: error.message || 'No files found at this location with that secret phrase.',
+        description: errorMessage,
         variant: 'destructive',
       })
     } finally {
@@ -106,7 +121,7 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
           transform: 'translate(-50%, -50%)',
         }}
       >
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 min-w-80">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 min-w-80 max-w-sm mx-4 sm:mx-0">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
@@ -132,16 +147,27 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Secret Phrase
               </label>
-              <Input
-                type="password"
-                placeholder="Enter secret phrase..."
-                value={secret}
-                onChange={(e) => setSecret(e.target.value)}
-                onKeyDown={handleKeyDown}
-                autoFocus
-                autoComplete="off"
-                className="w-full"
-              />
+              <div className="relative">
+                <Input
+                  type={showSecret ? "text" : "password"}
+                  placeholder="Enter secret phrase..."
+                  value={secret}
+                  onChange={(e) => setSecret(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  autoFocus
+                  autoComplete="new-password"
+                  data-lpignore="true"
+                  spellCheck="false"
+                  className="w-full pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSecret(!showSecret)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Enter the secret phrase to search for buried files at this location
               </p>

@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { User, Settings, LogOut, Moon, Sun, Menu, X } from 'lucide-react'
+import { User, Settings, LogOut, Moon, Sun, Menu, X, Crown } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/components/auth-provider'
 import { AuthModal } from '@/components/auth/auth-modal'
+import { HuntDashboardModal } from '@/components/hunts/hunt-dashboard-modal'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -24,6 +25,7 @@ export function Navigation({ className }: NavigationProps) {
   const { user, signOut } = useAuth()
   const { theme, setTheme } = useTheme()
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showHuntDashboard, setShowHuntDashboard] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
@@ -71,12 +73,23 @@ export function Navigation({ className }: NavigationProps) {
               </Button>
               
               {user && (
-                <Button
-                  variant="ghost"
-                  onClick={() => router.push('/app/drops')}
-                >
-                  My Drops
-                </Button>
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => router.push('/app/drops')}
+                  >
+                    My Drops
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowHuntDashboard(true)}
+                    className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Treasure Hunts
+                  </Button>
+                </>
               )}
 
               <Button

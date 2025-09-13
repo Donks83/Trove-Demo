@@ -47,7 +47,10 @@ export async function POST(request: NextRequest) {
     const lng = parseFloat(formData.get('lng') as string)
     const geofenceRadiusM = parseInt(formData.get('geofenceRadiusM') as string)
     const scope = formData.get('scope') as 'public' | 'private'
+    const dropType = formData.get('dropType') as 'private' | 'public' | 'hunt' || 'private'
     const retrievalMode = formData.get('retrievalMode') as 'remote' | 'physical'
+    const huntCode = formData.get('huntCode') as string || null
+    const huntDifficulty = formData.get('huntDifficulty') as 'beginner' | 'intermediate' | 'expert' | 'master' || null
     const expiresAt = formData.get('expiresAt') ? new Date(formData.get('expiresAt') as string) : null
     
     // Get files
@@ -60,6 +63,9 @@ export async function POST(request: NextRequest) {
       lng,
       geofenceRadiusM,
       scope,
+      dropType,
+      huntCode,
+      huntDifficulty,
       retrievalMode,
       filesCount: files.length
     })
@@ -104,6 +110,9 @@ export async function POST(request: NextRequest) {
       coords: { lat, lng, geohash: `demo_${lat}_${lng}` },
       geofenceRadiusM,
       scope,
+      dropType,
+      huntCode,
+      huntDifficulty,
       retrievalMode,
       tier: user.tier,
       ownerId: user.uid,
@@ -121,15 +130,21 @@ export async function POST(request: NextRequest) {
     console.log('Created functional drop:', {
       id: newDrop.id,
       title: newDrop.title,
+      dropType: newDrop.dropType,
+      huntCode: newDrop.huntCode,
       filesCount: newDrop.files.length,
       location: `${lat}, ${lng}`,
       canBeUnearthed: true
     })
     
+    const successMessage = dropType === 'hunt' 
+      ? `Treasure hunt created! Share hunt code "${huntCode}" with participants for proximity hints.`
+      : `Drop created successfully! You can now unearth it with the secret phrase.`
+    
     return NextResponse.json({
       success: true,
       drop: newDrop,
-      message: `Drop created successfully! You can now unearth it with the secret phrase.`
+      message: successMessage
     })
     
   } catch (error) {

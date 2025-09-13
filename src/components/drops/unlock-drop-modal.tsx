@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { X, Lock, MapPin, Download, AlertCircle, Navigation, Shield } from 'lucide-react'
+import { X, Lock, MapPin, Download, AlertCircle, Navigation, Shield, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -29,6 +29,7 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [locationError, setLocationError] = useState<string | null>(null)
   const [unlockResult, setUnlockResult] = useState<UnlockDropResponse | null>(initialUnlockResult || null)
+  const [showSecret, setShowSecret] = useState(false)
 
   const form = useForm<UnlockDropInput>({
     resolver: zodResolver(unlockDropSchema),
@@ -145,6 +146,7 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
     form.reset()
     setUserLocation(null)
     setLocationError(null)
+    setShowSecret(false)
     onClose()
   }
 
@@ -314,12 +316,24 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Secret phrase *
               </label>
-              <Input
-                type="password"
-                placeholder="Enter the secret phrase..."
-                {...form.register('secret')}
-                autoComplete="off"
-              />
+              <div className="relative">
+                <Input
+                  type={showSecret ? "text" : "password"}
+                  placeholder="Enter the secret phrase..."
+                  {...form.register('secret')}
+                  autoComplete="new-password"
+                  data-lpignore="true"
+                  spellCheck="false"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSecret(!showSecret)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               {form.formState.errors.secret && (
                 <p className="text-sm text-red-600">{form.formState.errors.secret.message}</p>
               )}
