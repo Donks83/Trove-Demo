@@ -7,15 +7,13 @@ import { isValidHuntCode } from '@/lib/hunt-permissions'
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
-    const authResult = await verifyAuthToken(request)
-    if (!authResult.success || !authResult.user) {
+    const user = await verifyAuthToken(request)
+    if (!user) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' } as JoinHuntByCodeResponse,
         { status: 401 }
       )
     }
-
-    const user = authResult.user
     const body: JoinHuntByCodeRequest = await request.json()
     
     if (!body.huntCode || !isValidHuntCode(body.huntCode)) {
