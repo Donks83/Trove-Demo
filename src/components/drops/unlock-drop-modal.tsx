@@ -111,7 +111,7 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
       if (result.success) {
         setUnlockResult(result)
         toast({
-          title: 'Drop unlocked! 🎉',
+          title: 'Drop unlocked!',
           description: 'Your download links are ready.',
         })
       }
@@ -136,7 +136,7 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
     
     // Show success feedback
     toast({
-      title: 'File downloaded! 🎉',
+      title: 'File downloaded',
       description: `${fileName} has been downloaded to your device.`,
     })
   }
@@ -248,8 +248,11 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
             </Button>
           </div>
         ) : (
-          // Form state
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          // Form state - FIXED: prevent password save prompts
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
+            {/* Hidden field to prevent browser password detection */}
+            <input type="text" name="fake-username" style={{ display: 'none' }} autoComplete="username" />
+            
             {/* Location status */}
             {drop?.coords && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
@@ -270,8 +273,8 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
                                 isWithinRadius ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'
                               )}>
                                 {isWithinRadius 
-                                  ? '✓ Within unlock radius' 
-                                  : `⚠ Need to be within ${formatDistance(drop.geofenceRadiusM)}`
+                                  ? 'Within unlock radius' 
+                                  : `Need to be within ${formatDistance(drop.geofenceRadiusM)}`
                                 }
                               </div>
                             )}
@@ -311,7 +314,7 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
               </div>
             )}
 
-            {/* Secret phrase input */}
+            {/* Secret phrase input - FIXED: prevent password save prompts */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Secret phrase *
@@ -319,12 +322,15 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
               <div className="relative">
                 <Input
                   type={showSecret ? "text" : "password"}
-                  placeholder="Enter the secret phrase..."
+                  placeholder="Enter secret phrase"
                   {...form.register('secret')}
-                  autoComplete="new-password"
+                  autoComplete="off"
+                  data-form-type="other"
                   data-lpignore="true"
+                  data-1p-ignore="true"
                   spellCheck="false"
                   className="pr-10"
+                  name="treasure-secret-phrase"
                 />
                 <button
                   type="button"

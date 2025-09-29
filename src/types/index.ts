@@ -93,6 +93,16 @@ export interface DropStats {
   lastAccessedAt?: Timestamp
 }
 
+export interface DropFile {
+  id: string
+  name: string
+  size: number
+  type: string
+  uploadedAt: Date | Timestamp
+  storagePath?: string // Firebase Storage path for persistent storage
+  downloadUrl: string
+}
+
 export interface Drop {
   id: string
   ownerId: string
@@ -107,7 +117,7 @@ export interface Drop {
   huntDifficulty?: 'beginner' | 'intermediate' | 'expert' | 'master'
   huntId?: string // Links to TreasureHunt if using complex hunt system
   expiresAt?: Timestamp
-  storagePath: string
+  files?: DropFile[] // Array of files associated with this drop
   retrievalMode: RetrievalMode
   tier: UserTier
   createdAt: Timestamp

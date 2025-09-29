@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuthToken } from '@/lib/auth-server'
 import { randomBytes, createHash } from 'crypto'
 import { demoDropsStore, uploadedFilesStore } from '@/lib/demo-storage'
+import { uploadFileToStorage } from '@/lib/firebase-storage'
+
+// Add CORS headers for mobile app
+function addCorsHeaders(response: NextResponse) {
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  return response
+}
+
+// Handle preflight requests
+export async function OPTIONS() {
+  return addCorsHeaders(new NextResponse(null, { status: 200 }))
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,14 +23,16 @@ export async function GET(request: NextRequest) {
     
     // Return drops from our demo storage
     console.log('Returning drops from storage:', demoDropsStore.length)
-    return NextResponse.json({ drops: demoDropsStore })
+    const response = NextResponse.json({ drops: demoDropsStore })
+    return addCorsHeaders(response)
     
   } catch (error) {
     console.error('Error in drops API:', error)
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
+    return addCorsHeaders(response)
   }
 }
 
@@ -29,10 +45,11 @@ export async function POST(request: NextRequest) {
     const user = await verifyAuthToken(request)
     if (!user) {
       console.log('No valid auth token found')
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'No auth token' },
         { status: 401 }
       )
+      return addCorsHeaders(response)
     }
     
     console.log('Authenticated user:', user.uid)
@@ -82,22 +99,43 @@ export async function POST(request: NextRequest) {
         const buffer = await file.arrayBuffer()
         const fileId = `${dropId}_file_${index}`
         
-        // Store file content in memory for demo
-        uploadedFilesStore[fileId] = {
-          name: file.name,
-          content: Buffer.from(buffer),
-          type: file.type
-        }
-        
-        console.log(`Stored file: ${file.name} (${buffer.byteLength} bytes)`)
-        
-        return {
-          id: fileId,
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          uploadedAt: new Date(),
-          downloadUrl: `/api/drops/${dropId}/files/${file.name}`
+        try {
+          // Upload to Firebase Storage (persistent)
+          const storagePath = await uploadFileToStorage(
+            Buffer.from(buffer),
+            file.name,
+            file.type,
+            dropId
+          )
+          
+          console.log(`✅ Uploaded file to Firebase Storage: ${file.name} (${buffer.byteLength} bytes)`)
+          
+          return {
+            id: fileId,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            uploadedAt: new Date(),
+            storagePath, // Store the Firebase Storage path
+            downloadUrl: `/api/drops/${dropId}/files/${file.name}`
+          }
+        } catch (error) {
+          // Fallback to in-memory storage if Firebase fails (for development)
+          console.warn(`⚠️ Firebase upload failed, using in-memory storage: ${error}`)
+          uploadedFilesStore[fileId] = {
+            name: file.name,
+            content: Buffer.from(buffer),
+            type: file.type
+          }
+          
+          return {
+            id: fileId,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            uploadedAt: new Date(),
+            downloadUrl: `/api/drops/${dropId}/files/${file.name}`
+          }
         }
       })
     )
@@ -141,17 +179,19 @@ export async function POST(request: NextRequest) {
       ? `Treasure hunt created! Share hunt code "${huntCode}" with participants for proximity hints.`
       : `Drop created successfully! You can now unearth it with the secret phrase.`
     
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       drop: newDrop,
       message: successMessage
     })
+    return addCorsHeaders(response)
     
   } catch (error) {
     console.error('Error creating drop:', error)
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'Failed to create drop', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
+    return addCorsHeaders(response)
   }
 }

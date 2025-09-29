@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadedFilesStore } from '@/lib/demo-storage'
+import { downloadFileFromStorage, fileExists } from '@/lib/firebase-storage'
+import { demoDropsStore } from '@/lib/demo-storage'
 
 // Demo file contents for different file types
 const demoFiles: Record<string, { content: string; mimeType: string; isBase64?: boolean }> = {
@@ -236,7 +238,37 @@ export async function GET(
     
     console.log(`File download request: ${dropId}/${fileName}`)
     
-    // First check if this is an uploaded file (user-created drops)
+    // Find the drop to get storage path
+    const drop = demoDropsStore.find(d => d.id === dropId)
+    if (drop) {
+      const fileInfo = drop.files?.find(f => f.name === fileName)
+      
+      // Check if file has Firebase Storage path (new uploads)
+      if (fileInfo && 'storagePath' in fileInfo && fileInfo.storagePath) {
+        try {
+          console.log(`Attempting to download from Firebase Storage: ${fileInfo.storagePath}`)
+          const buffer = await downloadFileFromStorage(fileInfo.storagePath as string)
+          
+          const headers = new Headers()
+          headers.set('Content-Type', fileInfo.type)
+          headers.set('Content-Disposition', `attachment; filename="${fileName}"`)
+          headers.set('Content-Length', buffer.length.toString())
+          headers.set('Cache-Control', 'no-cache')
+          
+          console.log(`✅ Serving file from Firebase Storage: ${fileName} (${buffer.length} bytes)`)
+          
+          return new NextResponse(new Uint8Array(buffer), {
+            status: 200,
+            headers
+          })
+        } catch (error) {
+          console.error(`❌ Error downloading from Firebase Storage, trying fallback:`, error)
+          // Continue to fallback methods below
+        }
+      }
+    }
+    
+    // Fallback: Check in-memory storage (for old drops or development)
     const uploadedFileKey = Object.keys(uploadedFilesStore).find(key => {
       const file = uploadedFilesStore[key]
       return file.name === fileName && key.startsWith(dropId)
@@ -244,7 +276,7 @@ export async function GET(
     
     if (uploadedFileKey) {
       const uploadedFile = uploadedFilesStore[uploadedFileKey]
-      console.log(`Serving uploaded file: ${fileName} (${uploadedFile.content.length} bytes)`)
+      console.log(`⚠️ Serving from in-memory storage: ${fileName} (${uploadedFile.content.length} bytes)`)
       
       const headers = new Headers()
       headers.set('Content-Type', uploadedFile.type)

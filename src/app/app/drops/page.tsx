@@ -12,6 +12,24 @@ import { TIER_DISPLAY_NAMES, TIER_COLORS } from '@/lib/tiers'
 import type { Drop } from '@/types'
 import { cn } from '@/lib/utils'
 
+// Helper function to safely convert dates from API responses
+function toDateObject(dateValue: any): Date {
+  if (!dateValue) return new Date()
+  
+  // If it's already a Date object
+  if (dateValue instanceof Date) {
+    return dateValue
+  }
+  
+  // If it's a Firestore Timestamp with toDate method
+  if (dateValue && typeof dateValue.toDate === 'function') {
+    return dateValue.toDate()
+  }
+  
+  // If it's a string or number, convert it
+  return new Date(dateValue)
+}
+
 export default function DropsPage() {
   const { user, firebaseUser } = useAuth()
   const { toast } = useToast()
@@ -29,8 +47,6 @@ export default function DropsPage() {
       const token = await firebaseUser.getIdToken()
       if (!token) throw new Error('No auth token')
 
-      // In a real implementation, you'd have a separate endpoint for user's drops
-      // For now, we'll simulate this
       const response = await fetch('/api/user/drops', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -321,11 +337,11 @@ export default function DropsPage() {
                 <div className="flex items-center gap-1 text-xs text-gray-500">
                   <Clock className="w-3 h-3" />
                   <span>
-                    Created {new Date(drop.createdAt.toDate()).toLocaleDateString()}
+                    Created {toDateObject(drop.createdAt).toLocaleDateString()}
                   </span>
                   {drop.expiresAt && (
                     <span>
-                      • Expires {new Date(drop.expiresAt.toDate()).toLocaleDateString()}
+                      • Expires {toDateObject(drop.expiresAt).toLocaleDateString()}
                     </span>
                   )}
                 </div>
@@ -337,7 +353,6 @@ export default function DropsPage() {
                   size="sm"
                   className="flex-1"
                   onClick={() => {
-                    // TODO: Implement edit functionality
                     toast({
                       title: 'Coming soon',
                       description: 'Edit functionality will be available soon.',
