@@ -241,7 +241,7 @@ export async function GET(
     // Find the drop to get storage path
     const drop = demoDropsStore.find(d => d.id === dropId)
     if (drop) {
-      const fileInfo = drop.files?.find(f => f.name === fileName)
+      const fileInfo = drop.files?.find((f: any) => f.name === fileName)
       
       // Check if file has Firebase Storage path (new uploads)
       if (fileInfo && 'storagePath' in fileInfo && fileInfo.storagePath) {
