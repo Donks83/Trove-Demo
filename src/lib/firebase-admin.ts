@@ -9,6 +9,12 @@ export function initAdmin() {
   }
 
   try {
+    const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    
+    if (!storageBucket) {
+      throw new Error('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET environment variable is not set')
+    }
+
     // For production: Use service account JSON
     if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
       const serviceAccount = JSON.parse(
@@ -17,22 +23,24 @@ export function initAdmin() {
 
       const app = initializeApp({
         credential: cert(serviceAccount),
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        storageBucket: storageBucket,
       })
 
       isInitialized = true
       console.log('✅ Firebase Admin initialized with service account')
+      console.log('📦 Storage bucket:', storageBucket)
       return app
     }
 
     // For development: Use application default credentials or emulator
     const app = initializeApp({
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      storageBucket: storageBucket,
     })
 
     isInitialized = true
     console.log('✅ Firebase Admin initialized with default credentials')
+    console.log('📦 Storage bucket:', storageBucket)
     return app
   } catch (error) {
     console.error('❌ Error initializing Firebase Admin:', error)
