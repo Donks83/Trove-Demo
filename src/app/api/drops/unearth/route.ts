@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { demoDropsStore } from '@/lib/demo-storage'
 import { createHash } from 'crypto'
+import { getDrop, updateDropStats, getDropsNearLocation } from '@/lib/firestore-drops'
 
 // Add CORS headers for mobile app
 function addCorsHeaders(response: NextResponse) {
@@ -39,8 +40,15 @@ export async function POST(request: NextRequest) {
     console.log('Looking for drops near:', { lat, lng })
     console.log('Demo drops available:', demoDropsStore.length)
     
+    // Check Firestore drops first
+    const firestoreDrops = await getDropsNearLocation(lat, lng, 10) // Search within 10km
+    console.log(`Found ${firestoreDrops.length} Firestore drops nearby`)
+    
+    // Combine Firestore drops with demo drops
+    const allDrops = [...firestoreDrops, ...demoDropsStore]
+    
     // Find drops within geofence
-    for (const drop of demoDropsStore) {
+    for (const drop of allDrops) {
       console.log(`Checking drop: ${drop.title} at ${drop.coords.lat}, ${drop.coords.lng}`)
       
       // Calculate distance
@@ -59,8 +67,18 @@ export async function POST(request: NextRequest) {
         if (drop.secretHash === secretHash) {
           console.log('🎉 Secret matches! Unlocking drop:', drop.title)
           
-          // Update stats
-          drop.stats.unlocks += 1
+          // Update stats in Firestore if it's a Firestore drop
+          const isFirestoreDrop = firestoreDrops.some(fd => fd.id === drop.id)
+          if (isFirestoreDrop) {
+            try {
+              await updateDropStats(drop.id, { unlocks: drop.stats.unlocks + 1 })
+            } catch (err) {
+              console.error('Failed to update Firestore stats:', err)
+            }
+          } else {
+            // Update in-memory stats for demo drops
+            drop.stats.unlocks += 1
+          }
           
           // Return success with file information
           const response = NextResponse.json({

@@ -3,6 +3,7 @@ import { verifyAuthToken } from '@/lib/auth-server'
 import { randomBytes, createHash } from 'crypto'
 import { demoDropsStore, uploadedFilesStore } from '@/lib/demo-storage'
 import { uploadFileToStorage } from '@/lib/firebase-storage'
+import { createDrop, getDrops, FirestoreDrop } from '@/lib/firestore-drops'
 
 // Add CORS headers for mobile app
 function addCorsHeaders(response: NextResponse) {
@@ -21,9 +22,15 @@ export async function GET(request: NextRequest) {
   try {
     console.log('API route called with:', request.url)
     
-    // Return drops from our demo storage
-    console.log('Returning drops from storage:', demoDropsStore.length)
-    const response = NextResponse.json({ drops: demoDropsStore })
+    // Fetch drops from Firestore
+    const firestoreDrops = await getDrops({ scope: 'public' })
+    console.log(`Found ${firestoreDrops.length} drops in Firestore`)
+    
+    // Combine with demo drops for backward compatibility
+    const allDrops = [...firestoreDrops, ...demoDropsStore]
+    
+    console.log('Returning drops:', allDrops.length)
+    const response = NextResponse.json({ drops: allDrops })
     return addCorsHeaders(response)
     
   } catch (error) {
@@ -141,7 +148,7 @@ export async function POST(request: NextRequest) {
     )
     
     // Create the new drop
-    const newDrop = {
+    const newDrop: FirestoreDrop = {
       id: dropId,
       title,
       description,
@@ -158,12 +165,22 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
       expiresAt,
       stats: { views: 0, unlocks: 0 },
-      files: processedFiles,
+      files: processedFiles.map(f => ({
+        ...f,
+        uploadedAt: f.uploadedAt instanceof Date ? f.uploadedAt : new Date(),
+      })),
       secretHash // Store for unearth validation
     }
     
-    // Add to our demo storage
-    demoDropsStore.push(newDrop)
+    // Save to Firestore
+    try {
+      await createDrop(newDrop)
+      console.log('✅ Drop saved to Firestore:', dropId)
+    } catch (firestoreError) {
+      console.error('⚠️ Failed to save to Firestore, adding to memory fallback:', firestoreError)
+      // Fallback: add to demo storage if Firestore fails
+      demoDropsStore.push(newDrop as any)
+    }
     
     console.log('Created functional drop:', {
       id: newDrop.id,

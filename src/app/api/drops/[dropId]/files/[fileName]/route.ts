@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { uploadedFilesStore } from '@/lib/demo-storage'
 import { downloadFileFromStorage, fileExists } from '@/lib/firebase-storage'
 import { demoDropsStore } from '@/lib/demo-storage'
+import { getDrop } from '@/lib/firestore-drops'
 
 // Demo file contents for different file types
 const demoFiles: Record<string, { content: string; mimeType: string; isBase64?: boolean }> = {
@@ -238,8 +239,14 @@ export async function GET(
     
     console.log(`File download request: ${dropId}/${fileName}`)
     
-    // Find the drop to get storage path
-    const drop = demoDropsStore.find(d => d.id === dropId)
+    // Try to find the drop in Firestore first
+    let drop = await getDrop(dropId)
+    
+    // Fallback to demo drops if not in Firestore
+    if (!drop) {
+      drop = demoDropsStore.find(d => d.id === dropId) as any
+    }
+    
     if (drop) {
       const fileInfo = drop.files?.find((f: any) => f.name === fileName)
       
