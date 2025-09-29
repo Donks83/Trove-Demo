@@ -68,10 +68,10 @@ export async function POST(request: NextRequest) {
             metadata: {
               title: drop.title,
               description: drop.description,
-              fileNames: drop.files?.map(f => f.name) || [],
+              fileNames: drop.files?.map((f: any) => f.name) || [],
               createdAt: drop.createdAt.toISOString(),
             },
-            downloadUrls: drop.files?.map(f => f.downloadUrl) || [],
+            downloadUrls: drop.files?.map((f: any) => f.downloadUrl) || [],
             distance,
             dropType: drop.dropType,
             huntCode: drop.huntCode,
