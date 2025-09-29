@@ -4,6 +4,13 @@ import { initAdmin } from './firebase-admin'
 // Initialize Firebase Admin (reuses existing instance)
 initAdmin()
 
+// Get bucket name from environment
+const STORAGE_BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+
+if (!STORAGE_BUCKET) {
+  throw new Error('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET is not set')
+}
+
 /**
  * Upload a file to Firebase Storage
  * @param buffer - File content as Buffer
@@ -19,7 +26,7 @@ export async function uploadFileToStorage(
   dropId: string
 ): Promise<string> {
   try {
-    const bucket = getStorage().bucket()
+    const bucket = getStorage().bucket(STORAGE_BUCKET) // Explicitly pass bucket name
     const filePath = `drops/${dropId}/${fileName}`
     const file = bucket.file(filePath)
 
@@ -56,7 +63,7 @@ export async function uploadFileToStorage(
  */
 export async function downloadFileFromStorage(filePath: string): Promise<Buffer> {
   try {
-    const bucket = getStorage().bucket()
+    const bucket = getStorage().bucket(STORAGE_BUCKET) // Explicitly pass bucket name
     const file = bucket.file(filePath)
 
     const [buffer] = await file.download()
@@ -76,7 +83,7 @@ export async function downloadFileFromStorage(filePath: string): Promise<Buffer>
  */
 export async function getSignedUrl(filePath: string, expiresInMs = 60 * 60 * 1000): Promise<string> {
   try {
-    const bucket = getStorage().bucket()
+    const bucket = getStorage().bucket(STORAGE_BUCKET) // Explicitly pass bucket name
     const file = bucket.file(filePath)
 
     const [signedUrl] = await file.getSignedUrl({
@@ -97,7 +104,7 @@ export async function getSignedUrl(filePath: string, expiresInMs = 60 * 60 * 100
  */
 export async function deleteFileFromStorage(filePath: string): Promise<void> {
   try {
-    const bucket = getStorage().bucket()
+    const bucket = getStorage().bucket(STORAGE_BUCKET) // Explicitly pass bucket name
     const file = bucket.file(filePath)
 
     await file.delete()
@@ -114,7 +121,7 @@ export async function deleteFileFromStorage(filePath: string): Promise<void> {
  */
 export async function deleteDropFiles(dropId: string): Promise<void> {
   try {
-    const bucket = getStorage().bucket()
+    const bucket = getStorage().bucket(STORAGE_BUCKET) // Explicitly pass bucket name
     const [files] = await bucket.getFiles({
       prefix: `drops/${dropId}/`,
     })
@@ -134,7 +141,7 @@ export async function deleteDropFiles(dropId: string): Promise<void> {
  */
 export async function fileExists(filePath: string): Promise<boolean> {
   try {
-    const bucket = getStorage().bucket()
+    const bucket = getStorage().bucket(STORAGE_BUCKET) // Explicitly pass bucket name
     const file = bucket.file(filePath)
     const [exists] = await file.exists()
     return exists
