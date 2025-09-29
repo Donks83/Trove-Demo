@@ -31,7 +31,7 @@ export interface FirestoreDrop {
     size: number
     type: string
     uploadedAt: Date
-    storagePath: string
+    storagePath?: string // Optional: only present for Firebase Storage uploads
     downloadUrl: string
   }>
   retrievalMode: 'remote' | 'physical'
