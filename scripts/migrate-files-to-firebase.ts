@@ -33,7 +33,7 @@ async function migrateFiles() {
       }
 
       // Find the file in the drop's metadata
-      const file = drop.files?.find(f => f.name === fileData.name)
+      const file = drop.files?.find((f: any) => f.name === fileData.name)
       if (!file) {
         console.log(`⚠️  Skipping ${fileId}: File metadata not found`)
         skippedCount++
