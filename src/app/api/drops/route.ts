@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
       geofenceRadiusM,
       scope,
       dropType,
-      huntCode,
-      huntDifficulty,
+      huntCode: huntCode || undefined,
+      huntDifficulty: huntDifficulty || undefined,
       retrievalMode,
       filesCount: files.length
     })
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
       ownerId: user.uid,
       createdAt: new Date(),
       updatedAt: new Date(),
-      expiresAt,
+      expiresAt: expiresAt || undefined,
       stats: { views: 0, unlocks: 0 },
       files: processedFiles.map(f => ({
         ...f,
