@@ -49,8 +49,13 @@ export interface FirestoreDrop {
  */
 export async function createDrop(drop: FirestoreDrop): Promise<void> {
   try {
+    // Remove undefined values - Firestore doesn't accept them
+    const cleanedDrop = Object.fromEntries(
+      Object.entries(drop).filter(([_, value]) => value !== undefined)
+    )
+    
     await db.collection(DROPS_COLLECTION).doc(drop.id).set({
-      ...drop,
+      ...cleanedDrop,
       createdAt: drop.createdAt,
       updatedAt: drop.updatedAt,
       expiresAt: drop.expiresAt || null,
