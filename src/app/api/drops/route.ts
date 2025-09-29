@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
       title: newDrop.title,
       dropType: newDrop.dropType,
       huntCode: newDrop.huntCode,
-      filesCount: newDrop.files.length,
+      filesCount: newDrop.files?.length || 0,
       location: `${lat}, ${lng}`,
       canBeUnearthed: true
     })
