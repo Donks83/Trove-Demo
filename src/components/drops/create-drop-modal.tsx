@@ -593,70 +593,29 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
               )}
             </div>
 
-            {/* Geofence Radius with Slider */}
-            <div className="space-y-4">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Precision radius: {formatDistance(radiusValue)}
-              </label>
-              
-              {/* Slider */}
-              <div className="space-y-2">
-                <input
-                  type="range"
-                  min={tierLimits.minRadiusM}
-                  max={tierLimits.maxRadiusM}
-                  step="5"
-                  value={radiusValue}
-                  onChange={(e) => form.setValue('geofenceRadiusM', parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-                />
-                
-                {/* Slider labels */}
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Precise</span>
-                  <span>Flexible</span>
+            {/* Drop Radius Display (set from map sidebar) */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-5 h-5 text-white" />
                 </div>
-                
-                <div className="flex justify-between text-xs text-gray-400">
-                  <span>{formatDistance(tierLimits.minRadiusM)}</span>
-                  <span>{formatDistance(tierLimits.maxRadiusM)}</span>
-                </div>
-              </div>
-
-              {/* Manual input as backup */}
-              <div className="flex items-center space-x-4">
-                <Input
-                  type="number"
-                  min={tierLimits.minRadiusM}
-                  max={tierLimits.maxRadiusM}
-                  step="5"
-                  value={radiusValue}
-                  onChange={(e) => form.setValue('geofenceRadiusM', parseInt(e.target.value) || tierLimits.minRadiusM)}
-                  className="w-24"
-                />
-                <span className="text-sm text-gray-500">meters</span>
-              </div>
-              
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-medium text-blue-900 dark:text-blue-100">Radius Guide</p>
-                    <p className="text-blue-700 dark:text-blue-300 mt-1">
-                      • <strong>10-25m</strong>: Room/building precision
-                      <br />• <strong>50-100m</strong>: City block accuracy  
-                      <br />• <strong>200m+</strong>: General area access
-                    </p>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100">Drop Radius</h4>
+                    <span className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                      {formatDistance(radiusValue)}
+                    </span>
                   </div>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    {radiusValue <= 25 && '🏢 Building precision - Files unlock within room/building'}
+                    {radiusValue > 25 && radiusValue <= 100 && '🏙️ City block accuracy - Files unlock within city block'}
+                    {radiusValue > 100 && '🗺️ General area - Files unlock within general area'}
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                    💡 <strong>Tip:</strong> Adjust the radius using the slider on the map before opening this dialog.
+                  </p>
                 </div>
               </div>
-              
-              <p className="text-xs text-gray-500">
-                Range: {formatDistance(tierLimits.minRadiusM)} - {formatDistance(tierLimits.maxRadiusM)} for {user?.tier} tier
-              </p>
-              {form.formState.errors.geofenceRadiusM && (
-                <p className="text-sm text-red-600">{form.formState.errors.geofenceRadiusM.message}</p>
-              )}
             </div>
 
             {/* Only show scope and retrieval options for non-hunt drops */}

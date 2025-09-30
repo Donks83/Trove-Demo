@@ -362,23 +362,47 @@ export function MapView({ className }: MapViewProps) {
                 <span className="text-sm text-gray-600 dark:text-gray-400">Precision:</span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {selectedRadius}m
+                  {user?.tier === 'free' && selectedRadius < 50 && (
+                    <span className="ml-2 text-xs text-purple-600 dark:text-purple-400">👑</span>
+                  )}
                 </span>
               </div>
               
-              <input
-                type="range"
-                min="10"
-                max="500"
-                step="5"
-                value={selectedRadius}
-                onChange={(e) => setSelectedRadius(parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-              />
+              <div className="relative">
+                <input
+                  type="range"
+                  min="10"
+                  max="500"
+                  step="5"
+                  value={selectedRadius}
+                  onChange={(e) => setSelectedRadius(parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                />
+                {/* Premium zone indicator */}
+                {user?.tier === 'free' && (
+                  <div 
+                    className="absolute top-0 left-0 h-2 bg-purple-200/50 dark:bg-purple-900/30 rounded-l-lg pointer-events-none"
+                    style={{ width: '8%' }} // ~40m out of 500m = 8%
+                  />
+                )}
+              </div>
               
               <div className="flex justify-between text-xs text-gray-400">
-                <span>10m</span>
+                <span>10m {user?.tier === 'free' && '👑'}</span>
                 <span>500m</span>
               </div>
+              
+              {/* Tier restriction message */}
+              {user?.tier === 'free' && selectedRadius < 50 && (
+                <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-2">
+                  <div className="flex items-start gap-2">
+                    <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-purple-900 dark:text-purple-100">
+                      <strong>Premium required:</strong> High precision (10-50m) is available for Premium+ users. Free users can use 50m+.
+                    </p>
+                  </div>
+                </div>
+              )}
               
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 {selectedRadius <= 25 && '🏢 Building precision'}
