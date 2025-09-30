@@ -162,7 +162,7 @@ export function MapView({ className }: MapViewProps) {
     setSearchLoading(true)
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const results = await searchLocations(value, 5)
+        const results = await searchLocations(value, 10)
         setSearchResults(results)
         setShowSearchResults(true)
       } catch (error) {
@@ -172,6 +172,18 @@ export function MapView({ className }: MapViewProps) {
         setSearchLoading(false)
       }
     }, 300) // Debounce search requests
+  }
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Handle Enter key to select first result
+    if (e.key === 'Enter' && searchResults.length > 0) {
+      e.preventDefault()
+      handleSearchResultClick(searchResults[0])
+    }
+    // Handle Escape to close results
+    if (e.key === 'Escape') {
+      setShowSearchResults(false)
+    }
   }
 
   const handleSearchResultClick = (result: SearchResult) => {
@@ -271,6 +283,7 @@ export function MapView({ className }: MapViewProps) {
                   placeholder="Search locations..."
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
                   autoComplete="off"
                   data-lpignore="true"
                   className="pl-10 pr-10 py-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-0 shadow-lg focus:ring-2 focus:ring-primary w-64"
@@ -303,12 +316,20 @@ export function MapView({ className }: MapViewProps) {
                             onClick={() => handleSearchResultClick(result)}
                             className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 flex items-start gap-2 transition-colors"
                           >
-                            <MapPin className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                            <MapPin className={cn(
+                              "w-4 h-4 mt-0.5 flex-shrink-0",
+                              result.source === 'custom' ? 'text-purple-500' : 'text-blue-500'
+                            )} />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
                                 <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
                                   {result.name}
                                 </div>
+                                {result.source === 'custom' && (
+                                  <span className="text-xs px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 font-medium flex-shrink-0">
+                                    ⭐
+                                  </span>
+                                )}
                                 <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-medium flex-shrink-0">
                                   {result.type}
                                 </span>
