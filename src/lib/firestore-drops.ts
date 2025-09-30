@@ -131,6 +131,38 @@ export async function getDrops(filters?: {
 }
 
 /**
+ * Update a drop's editable fields (title, description, secret)
+ */
+export async function updateDrop(
+  dropId: string,
+  updates: {
+    title?: string
+    description?: string
+    secretHash?: string
+  }
+): Promise<void> {
+  try {
+    const updateData: any = { 
+      updatedAt: new Date(),
+      ...updates
+    }
+    
+    // Remove undefined values
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key]
+      }
+    })
+    
+    await db.collection(DROPS_COLLECTION).doc(dropId).update(updateData)
+    console.log(`✅ Drop updated: ${dropId}`)
+  } catch (error) {
+    console.error(`❌ Error updating drop:`, error)
+    throw error
+  }
+}
+
+/**
  * Update drop stats (views, unlocks)
  */
 export async function updateDropStats(

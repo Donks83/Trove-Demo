@@ -11,6 +11,7 @@ import { formatDistance } from '@/lib/geo'
 import { TIER_DISPLAY_NAMES, TIER_COLORS } from '@/lib/tiers'
 import type { Drop } from '@/types'
 import { cn } from '@/lib/utils'
+import { EditDropModal } from '@/components/edit-drop-modal'
 
 // Helper function to safely convert dates from API responses
 function toDateObject(dateValue: any): Date {
@@ -38,6 +39,7 @@ export default function DropsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterScope, setFilterScope] = useState<'all' | 'public' | 'private'>('all')
+  const [editingDrop, setEditingDrop] = useState<Drop | null>(null)
 
   const fetchUserDrops = useCallback(async () => {
     if (!user || !firebaseUser) return
@@ -362,12 +364,7 @@ export default function DropsPage() {
                   variant="outline"
                   size="sm"
                   className="flex-1"
-                  onClick={() => {
-                    toast({
-                      title: 'Coming soon',
-                      description: 'Edit functionality will be available soon.',
-                    })
-                  }}
+                  onClick={() => setEditingDrop(drop)}
                 >
                   <Edit className="w-4 h-4 mr-1" />
                   Edit
@@ -384,6 +381,23 @@ export default function DropsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingDrop && firebaseUser && (
+        <EditDropModal
+          drop={editingDrop}
+          isOpen={!!editingDrop}
+          onClose={() => setEditingDrop(null)}
+          onSuccess={() => {
+            toast({
+              title: 'Drop updated',
+              description: 'Your drop has been successfully updated.',
+            })
+            fetchUserDrops()
+          }}
+          firebaseUser={firebaseUser}
+        />
       )}
     </div>
   )
