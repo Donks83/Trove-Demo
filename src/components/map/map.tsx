@@ -302,6 +302,24 @@ export default function Map({
   const { user } = useAuth()
   const mapRef = useRef<any>(null)
 
+  // Listen for navigation events from search
+  useEffect(() => {
+    const handleNavigate = (event: any) => {
+      const { lat, lng, zoom } = event.detail
+      console.log('Map navigating to:', lat, lng, 'zoom:', zoom)
+      
+      if (mapRef.current) {
+        // Use Leaflet's flyTo method for smooth animation
+        mapRef.current.flyTo([lat, lng], zoom || 15, {
+          duration: 1.5 // Animation duration in seconds
+        })
+      }
+    }
+    
+    window.addEventListener('navigateToLocation', handleNavigate)
+    return () => window.removeEventListener('navigateToLocation', handleNavigate)
+  }, [])
+
   // Get user's current location with better error handling
   useEffect(() => {
     if (navigator.geolocation) {

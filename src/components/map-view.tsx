@@ -175,12 +175,26 @@ export function MapView({ className }: MapViewProps) {
   }
 
   const handleSearchResultClick = (result: SearchResult) => {
-    // You can implement map navigation here
-    // For now, we'll just show the location in console
-    console.log('Navigate to:', result)
-    setSearchQuery(result.name)
+    console.log('Navigating to:', result)
+    
+    // Update search query with selected location name
+    setSearchQuery(result.description)
     setShowSearchResults(false)
-    // TODO: Add map.flyTo() functionality
+    
+    // Create a custom event to tell the Map component to navigate
+    const event = new CustomEvent('navigateToLocation', {
+      detail: {
+        lat: result.coordinates.lat,
+        lng: result.coordinates.lng,
+        zoom: 15 // Zoom level for selected location
+      }
+    })
+    window.dispatchEvent(event)
+    
+    // If in bury mode, optionally set this as the selected location
+    if (mode === 'bury' && user) {
+      setSelectedLocation(result.coordinates)
+    }
   }
 
   return (
@@ -287,14 +301,19 @@ export function MapView({ className }: MapViewProps) {
                           <button
                             key={result.id}
                             onClick={() => handleSearchResultClick(result)}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 flex items-start gap-2"
+                            className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 flex items-start gap-2 transition-colors"
                           >
-                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                            <div className="min-w-0">
-                              <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                {result.name}
+                            <MapPin className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                  {result.name}
+                                </div>
+                                <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-medium flex-shrink-0">
+                                  {result.type}
+                                </span>
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                              <div className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
                                 {result.description}
                               </div>
                             </div>
