@@ -34,6 +34,24 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
 }
 
 /**
+ * Tier display names for UI
+ */
+export const TIER_DISPLAY_NAMES: Record<UserTier, string> = {
+  free: 'Free Explorer',
+  premium: 'Premium',
+  business: 'Business'
+}
+
+/**
+ * Tier colors for UI
+ */
+export const TIER_COLORS: Record<UserTier, string> = {
+  free: 'gray',
+  premium: 'purple',
+  business: 'blue'
+}
+
+/**
  * Get tier limits for a given user tier
  */
 export function getTierLimits(tier: UserTier): TierLimits {
@@ -106,6 +124,51 @@ export function validateFileSize(sizeInBytes: number, tier: UserTier): {
   return {
     valid: true,
     maxMB
+  }
+}
+
+/**
+ * Validate a complete drop configuration against tier limits
+ */
+export function validateDropForTier(
+  tier: UserTier,
+  fileSizeMB: number,
+  radiusM: number,
+  isPrivate: boolean,
+  isPhysical: boolean
+): {
+  valid: boolean
+  errors: string[]
+} {
+  const limits = getTierLimits(tier)
+  const errors: string[] = []
+
+  // Validate file size
+  if (fileSizeMB > limits.maxFileSizeMB) {
+    errors.push(`File size ${fileSizeMB.toFixed(2)}MB exceeds ${limits.maxFileSizeMB}MB limit for ${tier} tier`)
+  }
+
+  // Validate radius
+  if (radiusM < limits.minRadiusM) {
+    errors.push(`Radius ${radiusM}m is below minimum ${limits.minRadiusM}m for ${tier} tier`)
+  }
+  if (radiusM > limits.maxRadiusM) {
+    errors.push(`Radius ${radiusM}m exceeds maximum ${limits.maxRadiusM}m for ${tier} tier`)
+  }
+
+  // Validate private spots permission
+  if (isPrivate && !limits.canUsePrivateSpots) {
+    errors.push(`Private drops require Premium+ tier`)
+  }
+
+  // Validate physical mode permission
+  if (isPhysical && !limits.canUsePhysicalMode) {
+    errors.push(`Physical unlock mode requires Premium+ tier`)
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors
   }
 }
 
