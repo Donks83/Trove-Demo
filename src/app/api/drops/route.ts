@@ -4,6 +4,7 @@ import { randomBytes, createHash } from 'crypto'
 import { demoDropsStore, uploadedFilesStore } from '@/lib/demo-storage'
 import { uploadFileToStorage } from '@/lib/firebase-storage'
 import { createDrop, getDrops, FirestoreDrop } from '@/lib/firestore-drops'
+import { canUsePhysicalMode, validateRadius, validateFileSize, getTierLimits } from '@/lib/tiers'
 
 // Add CORS headers for mobile app
 function addCorsHeaders(response: NextResponse) {
@@ -93,6 +94,53 @@ export async function POST(request: NextRequest) {
       retrievalMode,
       filesCount: files.length
     })
+    
+    // ============================================
+    // VALIDATION - Tier Restrictions
+    // ============================================
+    
+    // 1. Validate physical mode access
+    if (retrievalMode === 'physical' && !canUsePhysicalMode(user.tier)) {
+      console.log(`❌ Physical mode not available for ${user.tier} tier`)
+      const response = NextResponse.json({
+        error: 'Physical Mode Requires Premium',
+        message: 'Physical unlock mode (GPS validated) is available for Premium and Business tiers only.',
+        tier: user.tier,
+        upgradeRequired: true,
+        upgradeTo: 'premium'
+      }, { status: 403 })
+      return addCorsHeaders(response)
+    }
+    
+    // 2. Validate radius
+    const radiusValidation = validateRadius(geofenceRadiusM, user.tier)
+    if (!radiusValidation.valid) {
+      console.log(`❌ Invalid radius: ${radiusValidation.error}`)
+      const response = NextResponse.json({
+        error: 'Invalid Radius',
+        message: radiusValidation.error,
+        min: radiusValidation.min,
+        max: radiusValidation.max,
+        tier: user.tier
+      }, { status: 400 })
+      return addCorsHeaders(response)
+    }
+    
+    // 3. Validate file sizes
+    for (const file of files) {
+      const sizeValidation = validateFileSize(file.size, user.tier)
+      if (!sizeValidation.valid) {
+        console.log(`❌ File too large: ${sizeValidation.error}`)
+        const response = NextResponse.json({
+          error: 'File Too Large',
+          message: sizeValidation.error,
+          fileName: file.name,
+          maxMB: sizeValidation.maxMB,
+          tier: user.tier
+        }, { status: 400 })
+        return addCorsHeaders(response)
+      }
+    }
     
     // Create a functional drop that gets stored and can be unearthed
     const dropId = `drop_${Date.now()}_${randomBytes(4).toString('hex')}`
