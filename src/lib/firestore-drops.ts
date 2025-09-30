@@ -1,10 +1,9 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { initAdmin } from './firebase-admin'
 
-// Initialize Firebase Admin
-initAdmin()
-
-const db = getFirestore()
+// Initialize Firebase Admin and get the app instance
+const app = initAdmin()
+const db = getFirestore(app) // Pass the app instance explicitly
 const DROPS_COLLECTION = 'drops'
 
 export interface FirestoreDrop {
