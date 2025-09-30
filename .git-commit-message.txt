@@ -1,0 +1,41 @@
+fix: pass authenticated app instance to getFirestore
+
+Fixes Firestore READ operations that were failing with:
+"16 UNAUTHENTICATED: Request had invalid authentication credentials"
+
+## Problem
+Firestore READ operations (GET, queries) were failing with authentication
+errors while WRITE operations (POST) worked correctly. This caused:
+- Drops to be saved successfully but become invisible
+- Unearth operations to only find demo drops
+- Persistence to appear broken after serverless restarts
+
+## Root Cause
+`getFirestore()` was called without passing the authenticated Firebase Admin
+app instance, causing it to create a new, unauthenticated Firestore client.
+
+## Solution
+Pass the initialized and authenticated app instance explicitly:
+
+```typescript
+// Before (broken)
+initAdmin()
+const db = getFirestore()
+
+// After (fixed)
+const app = initAdmin()
+const db = getFirestore(app)
+```
+
+## Impact
+✅ All Firestore operations now use authenticated connection
+✅ Drops persist correctly across serverless restarts
+✅ Unearth operations can find Firestore-stored drops
+✅ Geographic queries work as expected
+
+## Testing
+- Verified drops can be created and unearthed
+- Tested persistence after serverless cold start
+- Confirmed no UNAUTHENTICATED errors in logs
+
+Closes #[issue-number] (if applicable)
