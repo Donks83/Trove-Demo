@@ -56,7 +56,17 @@ export default function DropsPage() {
       if (response.ok) {
         const data = await response.json()
         console.log('User drops response:', data)
-        setDrops(data.drops || [])
+        
+        // Convert ISO date strings back to Date objects
+        const dropsWithDates = (data.drops || []).map((drop: any) => ({
+          ...drop,
+          createdAt: new Date(drop.createdAt),
+          updatedAt: new Date(drop.updatedAt),
+          expiresAt: drop.expiresAt ? new Date(drop.expiresAt) : undefined,
+        }))
+        
+        console.log(`✅ Loaded ${dropsWithDates.length} user drops`)
+        setDrops(dropsWithDates)
       } else {
         console.error('Failed to fetch drops, status:', response.status)
         const errorData = await response.json().catch(() => ({}))

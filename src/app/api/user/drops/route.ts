@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuthToken } from '@/lib/auth-server'
+import { getDrops } from '@/lib/firestore-drops'
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,50 +18,22 @@ export async function GET(request: NextRequest) {
     
     console.log('Authenticated user for drops fetch:', user.uid)
     
-    // For now, return mock drops for this user
-    // In production, this would query Firestore for drops where ownerId === user.uid
-    const mockUserDrops = [
-      {
-        id: `user-drop-1-${user.uid}`,
-        title: 'My First Drop',
-        description: 'A test drop I created',
-        coords: { lat: 51.5074, lng: -0.1278, geohash: 'gcpvj0' },
-        geofenceRadiusM: 100,
-        scope: 'public',
-        retrievalMode: 'remote',
-        tier: user.tier,
-        ownerId: user.uid,
-        createdAt: { toDate: () => new Date() },
-        stats: { views: 5, unlocks: 2 },
-        files: [
-          { name: 'test-file.txt', size: 1024, type: 'text/plain' }
-        ]
-      },
-      {
-        id: `user-drop-2-${user.uid}`,
-        title: 'Photo Archive',
-        description: 'Family photos from vacation',
-        coords: { lat: 51.5155, lng: -0.1425, geohash: 'gcpvn0' },
-        geofenceRadiusM: 50,
-        scope: 'private',
-        retrievalMode: 'physical',
-        tier: user.tier,
-        ownerId: user.uid,
-        createdAt: { toDate: () => new Date(Date.now() - 86400000) }, // 1 day ago
-        expiresAt: { toDate: () => new Date(Date.now() + 30 * 86400000) }, // 30 days from now
-        stats: { views: 12, unlocks: 8 },
-        files: [
-          { name: 'vacation-1.jpg', size: 2048576, type: 'image/jpeg' },
-          { name: 'vacation-2.jpg', size: 1856432, type: 'image/jpeg' }
-        ]
-      }
-    ]
+    // Query Firestore for drops owned by this user
+    const userDrops = await getDrops({ ownerId: user.uid })
     
-    console.log('Returning mock user drops:', mockUserDrops.length, 'drops')
+    console.log(`✅ Found ${userDrops.length} drops for user ${user.uid}`)
+    
+    // Convert Firestore Timestamps to serializable format
+    const serializedDrops = userDrops.map(drop => ({
+      ...drop,
+      createdAt: drop.createdAt.toISOString(),
+      updatedAt: drop.updatedAt.toISOString(),
+      expiresAt: drop.expiresAt?.toISOString() || null,
+    }))
     
     return NextResponse.json({
       success: true,
-      drops: mockUserDrops
+      drops: serializedDrops
     })
     
   } catch (error) {
