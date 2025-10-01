@@ -85,7 +85,7 @@ const createDropIcon = (dropType: string, tier: string) => {
   const baseColors = {
     free: '#6b7280',
     premium: '#a855f7', 
-    business: '#3b82f6',
+    paid: '#3b82f6',
   }
   
   const baseColor = baseColors[tier as keyof typeof baseColors] || '#6b7280'
@@ -210,7 +210,7 @@ function DropMarker({
               'w-6 h-6 rounded-full flex items-center justify-center text-white text-xs',
               tier === 'free' && 'bg-gray-500',
               tier === 'premium' && 'bg-purple-500',
-              tier === 'business' && 'bg-blue-500'
+              tier === 'paid' && 'bg-blue-500'
             )}>
               {isHunt ? <Crown className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
             </div>
