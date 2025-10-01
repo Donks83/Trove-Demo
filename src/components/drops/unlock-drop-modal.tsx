@@ -21,9 +21,10 @@ interface UnlockDropModalProps {
   drop?: Partial<Drop>
   dropId?: string
   unlockResult?: UnlockDropResponse | null
+  prefilledLocation?: { lat: number; lng: number }
 }
 
-export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: initialUnlockResult }: UnlockDropModalProps) {
+export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: initialUnlockResult, prefilledLocation }: UnlockDropModalProps) {
   const { user, firebaseUser } = useAuth()
   const { toast } = useToast()
   const [unlocking, setUnlocking] = useState(false)
@@ -51,6 +52,13 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
 
   // Get user's location
   useEffect(() => {
+    // If prefilled location is provided (from drop link), use it
+    if (prefilledLocation) {
+      setUserLocation(prefilledLocation)
+      form.setValue('userCoords', prefilledLocation)
+      return
+    }
+    
     if (isOpen && (drop?.retrievalMode === 'physical' || drop?.coords)) {
       setLocationError(null)
       if (navigator.geolocation) {
@@ -74,7 +82,7 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
         setLocationError('Geolocation is not supported by this browser')
       }
     }
-  }, [isOpen, drop, form])
+  }, [isOpen, drop, form, prefilledLocation])
 
   const onSubmit = async (data: UnlockDropInput) => {
     if (!user || !firebaseUser) {
