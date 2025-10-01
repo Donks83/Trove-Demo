@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { MapPin, Search, X, Lock, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DisambiguationModal } from '@/components/drops/disambiguation-modal'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/ui/toaster'
 import type { UnlockDropResponse } from '@/types'
@@ -21,6 +22,9 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
   const [secret, setSecret] = useState('')
   const [searching, setSearching] = useState(false)
   const [showSecret, setShowSecret] = useState(false)
+  const [showDisambiguation, setShowDisambiguation] = useState(false)
+  const [dropOptions, setDropOptions] = useState<any[]>([])
+  const [disambiguationLoading, setDisambiguationLoading] = useState(false)
 
   if (!isVisible || !location) return null
 
@@ -65,6 +69,14 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
       const result: UnlockDropResponse = await response.json()
 
       if (!response.ok) {
+        // Check if disambiguation is required
+        if (result.requiresDisambiguation && result.dropOptions) {
+          console.log('Multiple drops found, showing disambiguation modal')
+          setDropOptions(result.dropOptions)
+          setShowDisambiguation(true)
+          return
+        }
+        
         throw new Error(result.error || 'Failed to unearth files')
       }
 
@@ -102,6 +114,53 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
     }
   }
 
+  const handleDisambiguationSelect = async (dropId: string) => {
+    setDisambiguationLoading(true)
+    try {
+      const token = await firebaseUser!.getIdToken()
+      
+      // Call the specific drop unlock endpoint
+      const response = await fetch(`/api/drops/${dropId}/unlock`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          secret: secret.trim(),
+          coords: location,
+        }),
+      })
+
+      const result: UnlockDropResponse = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to unlock drop')
+      }
+
+      if (result.success) {
+        toast({
+          title: 'Drop unlocked! 🎉',
+          description: 'Download links are ready.',
+        })
+        setShowDisambiguation(false)
+        onSuccess(result)
+        onClose()
+        setSecret('')
+        setDropOptions([])
+      }
+    } catch (error: any) {
+      console.error('Unlock error:', error)
+      toast({
+        title: 'Failed to unlock',
+        description: error.message || 'Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setDisambiguationLoading(false)
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleUnearth()
@@ -111,16 +170,17 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
   }
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-[1000]">
-      {/* Popup positioned above the marker */}
-      <div 
-        className="absolute pointer-events-auto"
-        style={{
-          top: '40%', // Position above center
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        }}
-      >
+    <>
+      <div className="absolute inset-0 pointer-events-none z-[1000]">
+        {/* Popup positioned above the marker */}
+        <div 
+          className="absolute pointer-events-auto"
+          style={{
+            top: '40%', // Position above center
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 min-w-80 max-w-sm mx-4 sm:mx-0">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -207,6 +267,19 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
           <div className="w-3 h-3 bg-white dark:bg-gray-800 border-r border-b border-gray-200 dark:border-gray-700 transform rotate-45"></div>
         </div>
       </div>
-    </div>
+      </div>
+
+      {/* Disambiguation Modal */}
+      <DisambiguationModal
+        isOpen={showDisambiguation}
+        onClose={() => {
+          setShowDisambiguation(false)
+          setDropOptions([])
+        }}
+        dropOptions={dropOptions}
+        onSelectDrop={handleDisambiguationSelect}
+        loading={disambiguationLoading}
+      />
+    </>
   )
 }

@@ -74,7 +74,9 @@ export async function POST(request: NextRequest) {
       console.log('No coordinates provided - only remote drops can be unlocked')
     }
     
-    // Find matching drops
+    // Find matching drops - COLLECT ALL MATCHES instead of returning first
+    const matchingDrops: any[] = []
+    
     for (const drop of allDrops) {
       console.log(`Checking drop: ${drop.title} (${drop.dropType}, ${drop.retrievalMode})`)
       
@@ -104,14 +106,7 @@ export async function POST(request: NextRequest) {
         // Physical mode requires GPS location
         if (!coords || !coords.lat || !coords.lng) {
           console.log('❌ Physical drop requires location')
-          const response = NextResponse.json({
-            success: false,
-            error: 'Location Required',
-            message: 'This drop requires physical presence. Please enable location services and try again.',
-            dropType: drop.dropType,
-            retrievalMode: 'physical'
-          })
-          return addCorsHeaders(response)
+          continue // Skip this drop, don't return error for multiple drops
         }
         
         // Calculate distance from user's GPS location
@@ -125,17 +120,7 @@ export async function POST(request: NextRequest) {
         // Check if within geofence
         if (distance > drop.geofenceRadiusM) {
           console.log(`❌ Too far away: ${Math.round(distance)}m > ${drop.geofenceRadiusM}m`)
-          const response = NextResponse.json({
-            success: false,
-            error: 'Too Far Away',
-            message: `You're ${Math.round(distance)}m from this drop. You need to be within ${drop.geofenceRadiusM}m to unlock it.`,
-            distance: Math.round(distance),
-            required: drop.geofenceRadiusM,
-            dropType: drop.dropType,
-            retrievalMode: 'physical',
-            hint: distance < drop.geofenceRadiusM * 2 ? 'You\'re getting close!' : 'Keep moving towards the location'
-          })
-          return addCorsHeaders(response)
+          continue // Skip this drop
         }
         
         console.log('✅ Within geofence for physical drop')
@@ -143,14 +128,7 @@ export async function POST(request: NextRequest) {
         // Remote mode - still validates radius, but using map pin location instead of GPS
         if (!coords || !coords.lat || !coords.lng) {
           console.log('❌ Remote drop requires map pin location')
-          const response = NextResponse.json({
-            success: false,
-            error: 'Location Required',
-            message: 'Please click on the map near the drop location to unlock it.',
-            dropType: drop.dropType,
-            retrievalMode: 'remote'
-          })
-          return addCorsHeaders(response)
+          continue // Skip this drop
         }
         
         // Calculate distance from map pin placement
@@ -164,26 +142,70 @@ export async function POST(request: NextRequest) {
         // Check if map pin is within geofence radius
         if (distance > drop.geofenceRadiusM) {
           console.log(`❌ Map pin too far: ${Math.round(distance)}m > ${drop.geofenceRadiusM}m`)
-          const response = NextResponse.json({
-            success: false,
-            error: 'Wrong Location',
-            message: `Your map pin is ${Math.round(distance)}m from the drop. Try clicking within ${drop.geofenceRadiusM}m of the correct location.`,
-            distance: Math.round(distance),
-            required: drop.geofenceRadiusM,
-            dropType: drop.dropType,
-            retrievalMode: 'remote',
-            hint: distance < drop.geofenceRadiusM * 2 ? 'You\'re close! Adjust your pin placement.' : 'Try a different location on the map.'
-          })
-          return addCorsHeaders(response)
+          continue // Skip this drop
         }
         
         console.log('✅ Map pin within geofence for remote drop')
       }
       
-      // ============================================
-      // SUCCESS - UNLOCK THE DROP
-      // ============================================
-      console.log('🎉 All checks passed! Unlocking drop:', drop.title)
+      // All checks passed - add to matching drops
+      matchingDrops.push(drop)
+    }
+    
+    // ============================================
+    // HANDLE RESULTS
+    // ============================================
+    
+    if (matchingDrops.length === 0) {
+      // No matching drops found
+      console.log('❌ No matching drops found')
+      
+      const response = NextResponse.json({
+        success: false,
+        error: 'No Drop Found',
+        message: coords 
+          ? 'No treasure found at this location with that secret phrase. Check your location and secret, or try a different spot.'
+          : 'No drop found with that secret phrase. Location may be required for physical drops.'
+      })
+      return addCorsHeaders(response)
+    }
+    
+    if (matchingDrops.length > 1) {
+      // MULTIPLE MATCHES - Return disambiguation data
+      console.log(`🔄 ${matchingDrops.length} drops found - returning disambiguation data`)
+      
+      const dropOptions = matchingDrops.map(drop => {
+        const distance = coords ? calculateDistance(
+          coords.lat, coords.lng,
+          drop.coords.lat, drop.coords.lng
+        ) : null
+        
+        return {
+          id: drop.id,
+          title: drop.title,
+          description: drop.description,
+          dropType: drop.dropType,
+          fileCount: drop.files?.length || 0,
+          createdAt: drop.createdAt instanceof Date ? drop.createdAt.toISOString() : drop.createdAt.toISOString(),
+          distance: distance ? Math.round(distance) : undefined,
+          ownerName: drop.ownerName || 'Anonymous',
+          stats: drop.stats
+        }
+      })
+      
+      const response = NextResponse.json({
+        success: false,
+        requiresDisambiguation: true,
+        dropOptions,
+        message: `Found ${matchingDrops.length} drops with this passphrase. Please select which one to unlock.`,
+        count: matchingDrops.length
+      })
+      return addCorsHeaders(response)
+    }
+    
+    // SINGLE MATCH - Unlock the drop
+    const drop = matchingDrops[0]
+    console.log('🎉 Single match found! Unlocking drop:', drop.title)
       
       // Calculate distance if coords provided (for stats)
       const distance = coords ? calculateDistance(
@@ -220,19 +242,6 @@ export async function POST(request: NextRequest) {
         message: `Found "${drop.title}"! ${drop.files?.length || 0} file(s) available for download.`
       })
       return addCorsHeaders(response)
-    }
-    
-    // No matching drops found
-    console.log('❌ No matching drops found')
-    
-    const response = NextResponse.json({
-      success: false,
-      error: 'No Drop Found',
-      message: coords 
-        ? 'No treasure found at this location with that secret phrase. Check your location and secret, or try a different spot.'
-        : 'No drop found with that secret phrase. Location may be required for physical drops.'
-    })
-    return addCorsHeaders(response)
     
   } catch (error) {
     console.error('Error in unearth:', error)

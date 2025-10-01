@@ -203,6 +203,7 @@ export async function deleteDrop(dropId: string): Promise<void> {
 
 /**
  * Get drops within a geographic area (simplified - would use geohash in production)
+ * Includes both public and private drops - access control is handled in the API layer
  */
 export async function getDropsNearLocation(
   lat: number,
@@ -210,9 +211,10 @@ export async function getDropsNearLocation(
   radiusKm: number = 10
 ): Promise<FirestoreDrop[]> {
   try {
-    // For now, get all public drops and filter in memory
+    // Get ALL drops (both public and private) and filter in memory
+    // Private drops will be filtered by access control in the API layer
     // In production, use geohash queries for efficiency
-    const allDrops = await getDrops({ scope: 'public' })
+    const allDrops = await getDrops({ limit: 1000 })
     
     return allDrops.filter(drop => {
       const distance = calculateDistance(

@@ -287,7 +287,7 @@ export function MapView({ className }: MapViewProps) {
                   onKeyDown={handleSearchKeyDown}
                   autoComplete="off"
                   data-lpignore="true"
-                  className="pl-10 pr-10 py-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-0 shadow-lg focus:ring-2 focus:ring-primary w-64"
+                  className="pl-10 pr-10 py-2 bg-white/90 dark:bg-gray-900/90 text-gray-900 dark:text-gray-100 backdrop-blur-sm border-0 shadow-lg focus:ring-2 focus:ring-primary w-64"
                 />
                 {searchQuery && (
                   <button

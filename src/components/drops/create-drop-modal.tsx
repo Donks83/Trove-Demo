@@ -8,6 +8,7 @@ import { X, Upload, MapPin, Clock, Eye, EyeOff, AlertCircle, Users, Crown, QrCod
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { ShareDropSuccessModal } from '@/components/drops/share-drop-success-modal'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/ui/toaster'
 import { toast as sonnerToast } from 'sonner'
@@ -38,6 +39,8 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
   const [huntDifficulty, setHuntDifficulty] = useState<'beginner' | 'intermediate' | 'expert' | 'master'>('beginner')
   const [copiedCode, setCopiedCode] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [createdDrop, setCreatedDrop] = useState<any>(null)
+  const [showShareModal, setShowShareModal] = useState(false)
 
   const tierLimits = user ? getTierLimits(user.tier) : getTierLimits('free')
 
@@ -264,8 +267,14 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
         }
       )
 
+      // Show share modal instead of immediately closing
+      setCreatedDrop(result.drop)
+      setShowShareModal(true)
+      
+      // Notify parent component
       onSuccess?.(result.drop)
-      onClose()
+      
+      // Reset form but don't close yet - share modal will handle closing
       form.reset()
       setFiles([])
       setHuntCode('')
@@ -604,6 +613,16 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                   : 'This phrase will be required to unlock your drop'
                 }
               </p>
+              {dropType !== 'hunt' && (
+                <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-xs text-blue-800 dark:text-blue-200 font-medium mb-1">🔒 Security Tips:</p>
+                  <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                    <li>• <strong>Make it unique:</strong> In popular areas, generic phrases may unlock multiple drops</li>
+                    <li>• <strong>Personal is secure:</strong> Use something only you and your intended recipients know</li>
+                    <li>• <strong>You control access:</strong> The more unique the phrase, the more secure your files</li>
+                  </ul>
+                </div>
+              )}
               {form.formState.errors.secret && (
                 <p className="text-sm text-red-600">{form.formState.errors.secret.message}</p>
               )}
@@ -895,6 +914,21 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Share Drop Success Modal */}
+      {createdDrop && (
+        <ShareDropSuccessModal
+          isOpen={showShareModal}
+          onClose={() => {
+            setShowShareModal(false)
+            setCreatedDrop(null)
+            onClose() // Close the create modal too
+          }}
+          dropId={createdDrop.id}
+          dropTitle={createdDrop.title}
+          dropType={createdDrop.dropType}
+        />
       )}
     </>
   )

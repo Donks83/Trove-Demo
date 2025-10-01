@@ -167,6 +167,24 @@ export interface UnlockDropResponse {
   }
   error?: string
   distance?: number
+  // Disambiguation fields
+  requiresDisambiguation?: boolean
+  dropOptions?: Array<{
+    id: string
+    title: string
+    description?: string
+    dropType: 'private' | 'public' | 'hunt'
+    fileCount: number
+    createdAt: string
+    distance?: number
+    ownerName: string
+    stats: {
+      views: number
+      unlocks: number
+    }
+  }>
+  count?: number
+  message?: string
 }
 
 export type GeoBounds = {

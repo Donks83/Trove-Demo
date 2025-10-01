@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { X, Lock, MapPin, Download, AlertCircle, Navigation, Shield, Eye, EyeOff } from 'lucide-react'
+import { X, Lock, MapPin, Download, AlertCircle, Navigation, Shield, Eye, EyeOff, Flag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { ReportModal } from '@/components/drops/report-modal'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/ui/toaster'
 import { unlockDropSchema, type UnlockDropInput } from '@/lib/validations'
@@ -30,6 +31,7 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
   const [locationError, setLocationError] = useState<string | null>(null)
   const [unlockResult, setUnlockResult] = useState<UnlockDropResponse | null>(initialUnlockResult || null)
   const [showSecret, setShowSecret] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
 
   const form = useForm<UnlockDropInput>({
     resolver: zodResolver(unlockDropSchema),
@@ -243,9 +245,19 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
               </div>
             )}
 
-            <Button onClick={handleClose} className="w-full">
-              Close
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowReportModal(true)}
+                className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                <Flag className="w-4 h-4" />
+                Report
+              </Button>
+              <Button onClick={handleClose} className="flex-1">
+                Close
+              </Button>
+            </div>
           </div>
         ) : (
           // Form state - FIXED: prevent password save prompts
@@ -388,8 +400,18 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
               </Button>
             </div>
           </form>
-        )}
-      </DialogContent>
+        )}  
+        </DialogContent>
+          
+            {/* Report Modal */}
+      {drop && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          dropId={drop.id || dropId || ''}
+          dropTitle={drop.title || 'Unknown Drop'}
+        />
+      )}
     </Dialog>
   )
 }
