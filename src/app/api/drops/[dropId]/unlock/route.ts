@@ -138,7 +138,9 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         title: drop.title,
         description: drop.description,
         fileNames: drop.files?.map((f: any) => f.name) || [],
-        createdAt: drop.createdAt instanceof Date ? drop.createdAt.toISOString() : drop.createdAt.toISOString(),
+        createdAt: drop.createdAt instanceof Date 
+          ? drop.createdAt.toISOString() 
+          : (drop.createdAt as any)?.toDate?.()?.toISOString?.() || new Date().toISOString(),
       },
       downloadUrls: drop.files?.map((f: any) => f.downloadUrl) || [],
       distance: distance ? Math.round(distance) : undefined,
