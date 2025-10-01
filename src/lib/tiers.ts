@@ -5,7 +5,7 @@ import type { UserTier, TierLimits } from '@/types'
  */
 export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   free: {
-    maxFileSizeMB: 10,
+    maxFileSizeMB: 100,
     defaultExpiryDays: 30,
     minRadiusM: 300, // Free users: 300-500m only
     maxRadiusM: 500,
@@ -14,7 +14,7 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
     maxDrops: 10
   },
   premium: {
-    maxFileSizeMB: 100,
+    maxFileSizeMB: 500,
     defaultExpiryDays: 365,
     minRadiusM: 10, // Premium: 10-100m
     maxRadiusM: 100,
@@ -22,10 +22,10 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
     canUsePhysicalMode: true, // ✅ Can use physical mode
     maxDrops: 100
   },
-  business: {
-    maxFileSizeMB: 500,
+  paid: {
+    maxFileSizeMB: 250,
     defaultExpiryDays: -1, // Unlimited
-    minRadiusM: 100, // Business: 100-300m
+    minRadiusM: 100, // Paid: 100-300m
     maxRadiusM: 300,
     canUsePrivateSpots: true,
     canUsePhysicalMode: true, // ✅ Can use physical mode
@@ -39,7 +39,7 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
 export const TIER_DISPLAY_NAMES: Record<UserTier, string> = {
   free: 'Free Explorer',
   premium: 'Premium',
-  business: 'Business'
+  paid: 'Paid Tier'
 }
 
 /**
@@ -48,7 +48,7 @@ export const TIER_DISPLAY_NAMES: Record<UserTier, string> = {
 export const TIER_COLORS: Record<UserTier, string> = {
   free: 'gray',
   premium: 'purple',
-  business: 'blue'
+  paid: 'blue'
 }
 
 /**
@@ -187,7 +187,7 @@ export const TIER_INFO: Record<UserTier, {
     icon: '🆓',
     features: [
       '10 drops max',
-      '10MB file limit',
+      '100MB file limit',
       '300-500m radius only',
       'Remote unlock only',
       '30 day expiry'
@@ -199,19 +199,19 @@ export const TIER_INFO: Record<UserTier, {
     icon: '👑',
     features: [
       '100 drops max',
-      '100MB file limit',
+      '500MB file limit',
       '10-100m high precision',
       '✅ Physical unlock',
       '365 day expiry'
     ]
   },
-  business: {
-    name: 'Business',
+  paid: {
+    name: 'Paid Tier',
     color: 'blue',
-    icon: '🏢',
+    icon: '💳',
     features: [
       '1000 drops max',
-      '500MB file limit',
+      '250MB file limit',
       '100-300m precision',
       '✅ Physical unlock',
       'Unlimited expiry'

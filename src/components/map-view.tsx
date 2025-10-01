@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { Search, Settings, Upload, Lock, Plus, X, MapPin, Crown } from 'lucide-react'
+import { Search, Settings, Upload, Lock, Plus, X, MapPin, Crown, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Navigation } from '@/components/navigation'
@@ -10,6 +10,7 @@ import { CreateDropModal } from '@/components/drops/create-drop-modal'
 import { UnlockDropModal } from '@/components/drops/unlock-drop-modal'
 import { UnearthPopup } from '@/components/drops/unearth-popup'
 import { JoinHuntModal } from '@/components/hunts/join-hunt-modal'
+import { DevTierSwitcher } from '@/components/dev/tier-switcher'
 import { useAuth } from '@/components/auth-provider'
 import { searchLocations, type SearchResult } from '@/lib/geocoding/mapbox-geocoder'
 import { cn } from '@/lib/utils'
@@ -352,9 +353,21 @@ export function MapView({ className }: MapViewProps) {
         {/* Radius Control Widget - shows when location is selected in bury mode */}
         {mode === 'bury' && selectedLocation && (
           <div className="absolute top-20 right-4 z-[1000] bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-lg max-w-xs">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Drop Radius</h3>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <h3 className="font-medium text-gray-900 dark:text-white">Drop Radius</h3>
+              </div>
+              {/* Padlock indicator when in restricted zone */}
+              {((user?.tier === 'free' && selectedRadius < 300) || 
+                (user?.tier === 'premium' && selectedRadius < 10) ||
+                (user?.tier === 'premium' && selectedRadius >= 100) ||
+                (user?.tier === 'paid' && (selectedRadius < 100 || selectedRadius >= 300))) && (
+                <div className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                  <Lock className="w-3 h-3" />
+                  <span className="font-medium">Locked</span>
+                </div>
+              )}
             </div>
             
             <div className="space-y-3">
@@ -363,7 +376,7 @@ export function MapView({ className }: MapViewProps) {
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {selectedRadius}m
                   {selectedRadius < 100 && <span className="ml-2 text-xs text-purple-600 dark:text-purple-400">👑</span>}
-                  {selectedRadius >= 100 && selectedRadius < 300 && <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">🏢</span>}
+                  {selectedRadius >= 100 && selectedRadius < 300 && <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">💳</span>}
                 </span>
               </div>
               
@@ -390,7 +403,7 @@ export function MapView({ className }: MapViewProps) {
               
               <div className="flex justify-between text-xs text-gray-400">
                 <span>10m 👑</span>
-                <span className="text-blue-500">100m 🏢</span>
+                <span className="text-blue-500">100m 💳</span>
                 <span className="text-green-600">300m 🆓</span>
                 <span>500m</span>
               </div>
@@ -409,13 +422,13 @@ export function MapView({ className }: MapViewProps) {
                   </div>
                 )}
                 
-                {/* Business zone: 100-300m */}
+                {/* Paid zone: 100-300m */}
                 {selectedRadius >= 100 && selectedRadius < 300 && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
                     <div className="flex items-start gap-2">
-                      <Crown className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                       <p className="text-xs text-blue-900 dark:text-blue-100">
-                        <strong>Business Tier:</strong> Medium precision (100-300m) for city block accuracy. {(user?.tier === 'free' || user?.tier === 'premium') && 'Upgrade to unlock!'}
+                        <strong>Paid Tier:</strong> Medium precision (100-300m) for city block accuracy. {(user?.tier === 'free' || user?.tier === 'premium') && 'Upgrade to unlock!'}
                       </p>
                     </div>
                   </div>
@@ -453,7 +466,7 @@ export function MapView({ className }: MapViewProps) {
                   <div className="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
                     {user.tier === 'free' && '🆓 Free Explorer'}
                     {user.tier === 'premium' && '👑 Premium'}
-                    {user.tier === 'business' && '🏢 Business'}
+                    {user.tier === 'paid' && '💳 Paid Tier'}
                     {process.env.NODE_ENV === 'development' && ' (Dev Mode)'}
                   </div>
                 )}
@@ -561,6 +574,9 @@ export function MapView({ className }: MapViewProps) {
         isOpen={showJoinHuntModal}
         onClose={() => setShowJoinHuntModal(false)}
       />
+
+      {/* Dev Tools */}
+      <DevTierSwitcher />
     </div>
   )
 }

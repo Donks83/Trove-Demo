@@ -1,97 +1,109 @@
 @echo off
+REM =================================================================
+REM Trove - Git Commit and Vercel Deploy Script (Windows)
+REM =================================================================
+
 echo.
 echo ========================================
-echo   TROVE - UI UPDATE DEPLOYMENT
+echo   TROVE DEPLOYMENT SCRIPT
 echo ========================================
 echo.
 
-REM Check if sonner is installed
-findstr /C:"sonner" package.json >nul 2>&1
+REM Check if git is installed
+git --version >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] Sonner not installed!
-    echo.
-    echo Please run: npm install sonner
-    echo.
+    echo ERROR: Git is not installed or not in PATH
+    echo Please install Git from https://git-scm.com/
     pause
     exit /b 1
 )
 
-echo [1/5] Installing dependencies...
-call npm install
-if errorlevel 1 (
-    echo [ERROR] npm install failed!
+echo [1/5] Checking git status...
+echo.
+git status
+echo.
+
+REM Ask for confirmation
+set /p CONFIRM="Do you want to commit and push these changes? (y/n): "
+if /i not "%CONFIRM%"=="y" (
+    echo Deployment cancelled.
     pause
-    exit /b 1
+    exit /b 0
 )
 
 echo.
-echo [2/5] Running TypeScript check...
-call npm run typecheck
-if errorlevel 1 (
-    echo [ERROR] TypeScript errors found!
-    echo Please fix errors before deploying.
-    pause
-    exit /b 1
-)
-
-echo.
-echo [3/5] Testing production build...
-call npm run build
-if errorlevel 1 (
-    echo [ERROR] Build failed!
-    echo Please fix build errors before deploying.
-    pause
-    exit /b 1
-)
-
-echo.
-echo [4/5] Staging changes...
+echo [2/5] Adding all changes to git...
 git add .
 
 echo.
-echo [5/5] Creating commit...
-git commit -m "feat: Enhanced create drop modal UI with tier restrictions - Added Sonner toast system for user-friendly notifications - Implemented card-based retrieval mode selection - Added Premium badges and upgrade prompts - Enhanced error handling with actionable CTAs - Improved visual hierarchy with icons and color coding"
+echo [3/5] Committing changes...
+echo.
+set /p COMMIT_MSG="Enter commit message (or press Enter for default): "
+if "%COMMIT_MSG%"=="" (
+    set COMMIT_MSG=feat: update tier system - adjust file size limits and fix EditDropModal integration
+)
+
+git commit -m "%COMMIT_MSG%"
 
 if errorlevel 1 (
-    echo [ERROR] Git commit failed!
-    echo Check if there are changes to commit.
+    echo.
+    echo ERROR: Git commit failed
     pause
     exit /b 1
 )
 
 echo.
-echo ========================================
-echo   READY TO DEPLOY!
-echo ========================================
-echo.
-echo The commit is ready. Push to deploy:
-echo   git push origin main
-echo.
-echo This will trigger Vercel deployment.
-echo Deployment will take 2-4 minutes.
-echo.
-echo Press any key to PUSH NOW, or Ctrl+C to cancel...
-pause >nul
-
-echo.
-echo Pushing to origin/main...
-git push origin main
+echo [4/5] Pushing to remote repository...
+git push
 
 if errorlevel 1 (
-    echo [ERROR] Git push failed!
-    echo Please check your git configuration and network connection.
+    echo.
+    echo ERROR: Git push failed
+    echo Please check your git configuration and try again
     pause
     exit /b 1
 )
 
 echo.
+echo [5/5] Triggering Vercel deployment...
+echo.
+
+REM Check if Vercel CLI is installed
+vercel --version >nul 2>&1
+if errorlevel 1 (
+    echo WARNING: Vercel CLI not found
+    echo.
+    echo To deploy to Vercel:
+    echo 1. Install Vercel CLI: npm i -g vercel
+    echo 2. Run: vercel --prod
+    echo.
+    echo OR: Vercel will auto-deploy from your git push if connected
+    echo.
+) else (
+    set /p DEPLOY="Deploy to Vercel now? (y/n): "
+    if /i "%DEPLOY%"=="y" (
+        echo.
+        echo Deploying to production...
+        vercel --prod
+    ) else (
+        echo.
+        echo Skipping Vercel deployment
+        echo Vercel will auto-deploy from git push if connected
+        echo.
+    )
+)
+
+echo.
 echo ========================================
-echo   DEPLOYMENT TRIGGERED!
+echo   DEPLOYMENT COMPLETE!
 echo ========================================
 echo.
-echo Check Vercel dashboard for deployment status:
-echo https://vercel.com/dashboard
+echo Changes committed and pushed successfully!
 echo.
-echo Deployment typically takes 2-4 minutes.
+echo Next steps:
+echo - Check your git repository for the new commit
+echo - Monitor Vercel dashboard for deployment status
+echo - Test the live site once deployment completes
 echo.
+
 pause

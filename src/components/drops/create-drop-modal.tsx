@@ -107,8 +107,14 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
   // Update form when drop type changes
   useEffect(() => {
     form.setValue('dropType', dropType)
-    if (dropType === 'hunt') {
-      form.setValue('scope', 'private')
+    
+    // Set scope based on drop type
+    if (dropType === 'private') {
+      form.setValue('scope', 'private') // Private drops are not visible on map
+    } else if (dropType === 'public') {
+      form.setValue('scope', 'public') // Public drops are visible on map
+    } else if (dropType === 'hunt') {
+      form.setValue('scope', 'private') // Hunt drops are private
       form.setValue('retrievalMode', 'physical')
       if (!huntCode) {
         generateHuntCode()
@@ -302,12 +308,12 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                   }`}
                 >
                   <div className="flex flex-col items-center gap-2">
-                    <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
-                      <MapPin className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                      <Lock className="w-4 h-4 text-white" />
                     </div>
                     <div className="text-center">
                       <div className="font-medium text-sm">Private</div>
-                      <div className="text-xs text-gray-500">Secure sharing</div>
+                      <div className="text-xs text-gray-500">Hidden pins</div>
                     </div>
                   </div>
                 </button>
@@ -373,20 +379,23 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-sm">
                 {dropType === 'private' && (
                   <div>
-                    <strong>Private drops</strong> are only accessible with exact coordinates and secret phrase. 
-                    Zero proximity hints - maximum security for confidential documents.
+                    <strong>Private drops</strong> are hidden from the map. To retrieve files, users need the correct secret phrase AND must be within the radius you set. Available to all tiers.
                   </div>
                 )}
                 {dropType === 'public' && (
                   <div>
-                    <strong>Public drops</strong> are visible on the map for anyone to discover. 
-                    No proximity hints - users must find them by exploring the map.
+                    <strong>Public drops</strong> are visible as pins on the map for anyone to discover. 
+                    To unlock files, users still need the correct secret phrase AND must be within the radius. Available to all tiers.
                   </div>
                 )}
                 {dropType === 'hunt' && (
                   <div>
                     <strong>Hunt drops</strong> create gamified experiences with proximity hints for invited participants only. 
-                    Perfect for team building and interactive adventures.
+                    Perfect for team building and interactive adventures. 
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded text-xs ml-2">
+                      <Crown className="w-3 h-3" />
+                      Premium+ only
+                    </span>
                   </div>
                 )}
               </div>
@@ -593,69 +602,70 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
               )}
             </div>
 
-            {/* Drop Radius Display (set from map sidebar) */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            {/* Drop Radius Display (set from map sidebar) - COLOR CODED BY TIER */}
+            <div className={cn(
+              "rounded-lg p-4 border-2",
+              radiusValue < 100 && "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+              radiusValue >= 100 && radiusValue < 300 && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+              radiusValue >= 300 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+            )}>
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className={cn(
+                  "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                  radiusValue < 100 && "bg-purple-500",
+                  radiusValue >= 100 && radiusValue < 300 && "bg-blue-500",
+                  radiusValue >= 300 && "bg-green-500"
+                )}>
                   <MapPin className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <h4 className="font-medium text-blue-900 dark:text-blue-100">Drop Radius</h4>
-                    <span className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                    <h4 className={cn(
+                      "font-medium flex items-center gap-2",
+                      radiusValue < 100 && "text-purple-900 dark:text-purple-100",
+                      radiusValue >= 100 && radiusValue < 300 && "text-blue-900 dark:text-blue-100",
+                      radiusValue >= 300 && "text-green-900 dark:text-green-100"
+                    )}>
+                      Drop Radius
+                      {radiusValue < 100 && <span className="text-xs">👑 Premium</span>}
+                      {radiusValue >= 100 && radiusValue < 300 && <span className="text-xs">💳 Paid</span>}
+                      {radiusValue >= 300 && <span className="text-xs">🆓 Free</span>}
+                    </h4>
+                    <span className={cn(
+                      "text-lg font-bold",
+                      radiusValue < 100 && "text-purple-900 dark:text-purple-100",
+                      radiusValue >= 100 && radiusValue < 300 && "text-blue-900 dark:text-blue-100",
+                      radiusValue >= 300 && "text-green-900 dark:text-green-100"
+                    )}>
                       {formatDistance(radiusValue)}
                     </span>
                   </div>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    {radiusValue <= 25 && '🏢 Building precision - Files unlock within room/building'}
-                    {radiusValue > 25 && radiusValue <= 100 && '🏙️ City block accuracy - Files unlock within city block'}
-                    {radiusValue > 100 && '🗺️ General area - Files unlock within general area'}
+                  <p className={cn(
+                    "text-sm",
+                    radiusValue < 100 && "text-purple-700 dark:text-purple-300",
+                    radiusValue >= 100 && radiusValue < 300 && "text-blue-700 dark:text-blue-300",
+                    radiusValue >= 300 && "text-green-700 dark:text-green-300"
+                  )}>
+                    {radiusValue <= 25 && '🏢 High precision - Files unlock within room/building'}
+                    {radiusValue > 25 && radiusValue <= 100 && '🏙️ High precision - Files unlock within city block'}
+                    {radiusValue > 100 && radiusValue <= 300 && '🏛️ Medium precision - Files unlock within district'}
+                    {radiusValue > 300 && '🗺️ General area - Files unlock within neighborhood'}
                   </p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                  <p className={cn(
+                    "text-xs mt-2",
+                    radiusValue < 100 && "text-purple-600 dark:text-purple-400",
+                    radiusValue >= 100 && radiusValue < 300 && "text-blue-600 dark:text-blue-400",
+                    radiusValue >= 300 && "text-green-600 dark:text-green-400"
+                  )}>
                     💡 <strong>Tip:</strong> Adjust the radius using the slider on the map before opening this dialog.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Only show scope and retrieval options for non-hunt drops */}
+            {/* Only show retrieval options for non-hunt drops */}
             {dropType !== 'hunt' && (
               <>
-                {/* Scope */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Visibility
-                  </label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        value="public"
-                        {...form.register('scope')}
-                        className="text-primary"
-                      />
-                      <span className="text-sm">Public (visible on map)</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        value="private"
-                        {...form.register('scope')}
-                        className="text-primary"
-                        disabled={!tierLimits.canUsePrivateSpots}
-                      />
-                      <span className={cn(
-                        'text-sm',
-                        !tierLimits.canUsePrivateSpots && 'text-gray-400'
-                      )}>
-                        Private (direct link only)
-                        {!tierLimits.canUsePrivateSpots && ' (Premium+)'}
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* ENHANCED Retrieval Mode Selection */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Unlock Mode

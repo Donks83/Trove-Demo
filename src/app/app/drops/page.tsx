@@ -397,6 +397,7 @@ export default function DropsPage() {
             fetchUserDrops()
           }}
           firebaseUser={firebaseUser}
+          userTier={user?.tier || 'free'}
         />
       )}
     </div>

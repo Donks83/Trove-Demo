@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore'
 
-export type UserTier = 'free' | 'premium' | 'business'
+export type UserTier = 'free' | 'premium' | 'paid'
 
 export type DropScope = 'public' | 'private'
 

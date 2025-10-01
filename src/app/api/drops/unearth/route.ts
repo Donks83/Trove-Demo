@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       // RETRIEVAL MODE CHECK
       // ============================================
       if (drop.retrievalMode === 'physical') {
-        // Physical mode requires location
+        // Physical mode requires GPS location
         if (!coords || !coords.lat || !coords.lng) {
           console.log('❌ Physical drop requires location')
           const response = NextResponse.json({
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
           return addCorsHeaders(response)
         }
         
-        // Calculate distance
+        // Calculate distance from user's GPS location
         const distance = calculateDistance(
           coords.lat, coords.lng,
           drop.coords.lat, drop.coords.lng
@@ -140,8 +140,44 @@ export async function POST(request: NextRequest) {
         
         console.log('✅ Within geofence for physical drop')
       } else {
-        // Remote mode - no location check needed
-        console.log('✅ Remote drop - no location validation required')
+        // Remote mode - still validates radius, but using map pin location instead of GPS
+        if (!coords || !coords.lat || !coords.lng) {
+          console.log('❌ Remote drop requires map pin location')
+          const response = NextResponse.json({
+            success: false,
+            error: 'Location Required',
+            message: 'Please click on the map near the drop location to unlock it.',
+            dropType: drop.dropType,
+            retrievalMode: 'remote'
+          })
+          return addCorsHeaders(response)
+        }
+        
+        // Calculate distance from map pin placement
+        const distance = calculateDistance(
+          coords.lat, coords.lng,  // Where they clicked on the map
+          drop.coords.lat, drop.coords.lng  // Actual drop location
+        )
+        
+        console.log(`Map pin distance: ${Math.round(distance)}m (geofence: ${drop.geofenceRadiusM}m)`)
+        
+        // Check if map pin is within geofence radius
+        if (distance > drop.geofenceRadiusM) {
+          console.log(`❌ Map pin too far: ${Math.round(distance)}m > ${drop.geofenceRadiusM}m`)
+          const response = NextResponse.json({
+            success: false,
+            error: 'Wrong Location',
+            message: `Your map pin is ${Math.round(distance)}m from the drop. Try clicking within ${drop.geofenceRadiusM}m of the correct location.`,
+            distance: Math.round(distance),
+            required: drop.geofenceRadiusM,
+            dropType: drop.dropType,
+            retrievalMode: 'remote',
+            hint: distance < drop.geofenceRadiusM * 2 ? 'You\'re close! Adjust your pin placement.' : 'Try a different location on the map.'
+          })
+          return addCorsHeaders(response)
+        }
+        
+        console.log('✅ Map pin within geofence for remote drop')
       }
       
       // ============================================
