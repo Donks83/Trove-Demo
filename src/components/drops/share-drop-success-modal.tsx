@@ -50,7 +50,7 @@ export function ShareDropSuccessModal({
   }
 
   const shareViaWebShare = async () => {
-    if (!navigator.share) {
+    if (typeof navigator === 'undefined' || !('share' in navigator)) {
       toast.error('Sharing not supported', {
         description: 'Your browser doesn\'t support Web Share API',
       })
@@ -155,7 +155,7 @@ export function ShareDropSuccessModal({
 
           {/* Quick actions */}
           <div className="grid grid-cols-2 gap-3">
-            {navigator.share && (
+            {typeof window !== 'undefined' && 'share' in navigator && (
               <Button
                 onClick={shareViaWebShare}
                 variant="outline"
