@@ -122,6 +122,13 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
     }
   }, [dropType, form, huntCode])
 
+  // Sync form radius with selected radius from map slider
+  useEffect(() => {
+    if (selectedRadius) {
+      form.setValue('geofenceRadiusM', selectedRadius)
+    }
+  }, [selectedRadius, form])
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const totalSize = acceptedFiles.reduce((sum, file) => sum + file.size, 0)
     const totalSizeMB = totalSize / (1024 * 1024)

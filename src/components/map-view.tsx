@@ -319,6 +319,7 @@ export function MapView({ className }: MapViewProps) {
                           >
                             <MapPin className={cn(
                               "w-4 h-4 mt-0.5 flex-shrink-0",
+                              result.type === 'GPS' ? 'text-green-500' : 
                               result.source === 'custom' ? 'text-purple-500' : 'text-blue-500'
                             )} />
                             <div className="min-w-0 flex-1">
@@ -410,25 +411,37 @@ export function MapView({ className }: MapViewProps) {
               
               {/* Always show a message (prevents jittering) */}
               <div className="min-h-[60px]">
-                {/* Premium zone: 10-100m */}
-                {selectedRadius < 100 && (
+                {/* Premium zone: 10-500m (full range) */}
+                {selectedRadius < 100 && user?.tier === 'premium' && (
                   <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-2">
                     <div className="flex items-start gap-2">
                       <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
                       <p className="text-xs text-purple-900 dark:text-purple-100">
-                        <strong>Premium Tier:</strong> High precision (10-100m) for building/room-level accuracy. {user?.tier === 'free' && 'Upgrade to unlock!'}
+                        <strong>Premium Tier:</strong> Full range access (10-500m). Currently set to high precision mode.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Premium zone locked */}
+                {selectedRadius < 100 && user?.tier !== 'premium' && (
+                  <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-2">
+                    <div className="flex items-start gap-2">
+                      <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-purple-900 dark:text-purple-100">
+                        <strong>Premium Tier:</strong> High precision (10-100m) for building/room-level accuracy. Upgrade to unlock!
                       </p>
                     </div>
                   </div>
                 )}
                 
-                {/* Paid zone: 100-300m */}
+                {/* Paid zone: 100-500m */}
                 {selectedRadius >= 100 && selectedRadius < 300 && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
                     <div className="flex items-start gap-2">
                       <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                       <p className="text-xs text-blue-900 dark:text-blue-100">
-                        <strong>Paid Tier:</strong> Medium precision (100-300m) for city block accuracy. {(user?.tier === 'free' || user?.tier === 'premium') && 'Upgrade to unlock!'}
+                        <strong>Paid Tier:</strong> Medium precision (100-500m) for city block accuracy. {user?.tier === 'free' && 'Upgrade to unlock!'}
                       </p>
                     </div>
                   </div>

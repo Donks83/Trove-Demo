@@ -87,7 +87,7 @@ export function DevTierSwitcher() {
               <Crown className="w-5 h-5 text-purple-600" />
               <div>
                 <div className="font-medium text-sm">Premium</div>
-                <div className="text-xs text-gray-500">10-100m precision</div>
+                <div className="text-xs text-gray-500">10-500m full range</div>
               </div>
             </div>
             {user.tier === 'premium' && <Check className="w-4 h-4 text-purple-600" />}
@@ -109,7 +109,7 @@ export function DevTierSwitcher() {
               <CreditCard className="w-5 h-5 text-blue-600" />
               <div>
                 <div className="font-medium text-sm">Paid Tier</div>
-                <div className="text-xs text-gray-500">100-300m precision</div>
+                <div className="text-xs text-gray-500">100-500m precision</div>
               </div>
             </div>
             {user.tier === 'paid' && <Check className="w-4 h-4 text-blue-600" />}

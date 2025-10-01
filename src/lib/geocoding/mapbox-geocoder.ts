@@ -52,14 +52,66 @@ function customPOIToSearchResult(poi: CustomPOI): SearchResult {
 }
 
 /**
+ * Parse GPS coordinates from various formats
+ * Supports: "54.5763, -1.2478", "54.5763,-1.2478", "54.5763 -1.2478"
+ * Also supports degree symbols: "54.5763° N, 1.2478° W"
+ */
+function parseCoordinates(query: string): { lat: number; lng: number } | null {
+  // Remove degree symbols and directional indicators for easier parsing
+  const cleaned = query
+    .replace(/[°′″]/g, '') // Remove degree symbols
+    .replace(/[NSEW]/gi, '') // Remove directional letters
+    .trim()
+  
+  // Try different coordinate formats
+  const patterns = [
+    // Standard: "54.5763, -1.2478" or "54.5763,-1.2478"
+    /^([+-]?\d+\.?\d*)\s*[,\s]\s*([+-]?\d+\.?\d*)$/,
+    // With explicit signs: "+54.5763, -1.2478"
+    /^([+-]?\d+\.?\d*)\s*[,\s]\s*([+-]?\d+\.?\d*)$/,
+  ]
+  
+  for (const pattern of patterns) {
+    const match = cleaned.match(pattern)
+    if (match) {
+      const lat = parseFloat(match[1])
+      const lng = parseFloat(match[2])
+      
+      // Validate coordinates are in valid ranges
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng }
+      }
+    }
+  }
+  
+  return null
+}
+
+/**
  * Search for locations using hybrid approach:
- * 1. Check custom POI database first (instant, high quality)
- * 2. Fall back to Mapbox Geocoding API
+ * 1. Check if input is GPS coordinates - if so, return immediately
+ * 2. Check custom POI database first (instant, high quality)
+ * 3. Fall back to Mapbox Geocoding API
  * 
  * Configured for UK with support for postcodes, addresses, and named places
  */
 export async function searchLocations(query: string, limit = 10): Promise<SearchResult[]> {
   if (!query.trim()) return []
+  
+  // STEP 0: Check if query is GPS coordinates
+  const coords = parseCoordinates(query.trim())
+  if (coords) {
+    console.log('GPS coordinates detected:', coords)
+    return [{
+      id: 'gps-coordinates',
+      name: `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`,
+      description: `GPS Coordinates: ${coords.lat.toFixed(6)}°, ${coords.lng.toFixed(6)}°`,
+      coordinates: coords,
+      type: 'GPS',
+      relevance: 1.0,
+      source: 'custom'
+    }]
+  }
   
   // STEP 1: Check custom POI database first
   const customResults = searchCustomPOIs(query)
