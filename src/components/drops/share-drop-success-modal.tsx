@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Copy, Check, Share2, X, QrCode, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -23,9 +23,15 @@ export function ShareDropSuccessModal({
 }: ShareDropSuccessModalProps) {
   const [copiedLink, setCopiedLink] = useState(false)
   const [copiedId, setCopiedId] = useState(false)
+  const [canShare, setCanShare] = useState(false)
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
   const shareLink = `${baseUrl}/drop/${dropId}`
+
+  // Check if Web Share API is available (client-side only)
+  useEffect(() => {
+    setCanShare(typeof navigator !== 'undefined' && 'share' in navigator)
+  }, [])
 
   const copyToClipboard = async (text: string, type: 'link' | 'id') => {
     try {
@@ -155,7 +161,7 @@ export function ShareDropSuccessModal({
 
           {/* Quick actions */}
           <div className="grid grid-cols-2 gap-3">
-            {typeof window !== 'undefined' && 'share' in navigator && (
+            {canShare && (
               <Button
                 onClick={shareViaWebShare}
                 variant="outline"
