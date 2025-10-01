@@ -46,7 +46,7 @@ export function MapView({ className }: MapViewProps) {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [showSearchResults, setShowSearchResults] = useState(false)
-  const [selectedRadius, setSelectedRadius] = useState(50) // Default radius
+  const [selectedRadius, setSelectedRadius] = useState(300) // Default radius for free tier
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Fetch public drops when component mounts
@@ -115,8 +115,8 @@ export function MapView({ className }: MapViewProps) {
       setDrops(prev => [...prev, newDrop])
     }
     setSelectedLocation(null)
-    // Reset radius to default after creating drop
-    setSelectedRadius(50)
+    // Reset radius to default (300m for free tier)
+    setSelectedRadius(300)
   }
 
   const handleUnearthSuccess = (result: UnlockDropResponse) => {
@@ -362,9 +362,8 @@ export function MapView({ className }: MapViewProps) {
                 <span className="text-sm text-gray-600 dark:text-gray-400">Precision:</span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {selectedRadius}m
-                  {user?.tier === 'free' && selectedRadius < 50 && (
-                    <span className="ml-2 text-xs text-purple-600 dark:text-purple-400">👑</span>
-                  )}
+                  {selectedRadius < 100 && <span className="ml-2 text-xs text-purple-600 dark:text-purple-400">👑</span>}
+                  {selectedRadius >= 100 && selectedRadius < 300 && <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">🏢</span>}
                 </span>
               </div>
               
@@ -378,36 +377,68 @@ export function MapView({ className }: MapViewProps) {
                   onChange={(e) => setSelectedRadius(parseInt(e.target.value))}
                   className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
                 />
-                {/* Premium zone indicator */}
-                {user?.tier === 'free' && (
-                  <div 
-                    className="absolute top-0 left-0 h-2 bg-purple-200/50 dark:bg-purple-900/30 rounded-l-lg pointer-events-none"
-                    style={{ width: '8%' }} // ~40m out of 500m = 8%
-                  />
-                )}
+                {/* Tier zone indicators - show for all users */}
+                <div className="absolute top-0 left-0 h-2 pointer-events-none flex w-full">
+                  {/* Premium zone: 10-100m = 18% */}
+                  <div className="h-2 bg-purple-300/60 dark:bg-purple-600/40" style={{ width: '18%' }} />
+                  {/* Business zone: 100-300m = 40% */}
+                  <div className="h-2 bg-blue-300/60 dark:bg-blue-600/40" style={{ width: '40%' }} />
+                  {/* Free zone: 300-500m = 40% */}
+                  <div className="h-2 bg-green-300/60 dark:bg-green-600/40 rounded-r-lg" style={{ width: '42%' }} />
+                </div>
               </div>
               
               <div className="flex justify-between text-xs text-gray-400">
-                <span>10m {user?.tier === 'free' && '👑'}</span>
+                <span>10m 👑</span>
+                <span className="text-blue-500">100m 🏢</span>
+                <span className="text-green-600">300m 🆓</span>
                 <span>500m</span>
               </div>
               
-              {/* Tier restriction message */}
-              {user?.tier === 'free' && selectedRadius < 50 && (
-                <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-2">
-                  <div className="flex items-start gap-2">
-                    <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-xs text-purple-900 dark:text-purple-100">
-                      <strong>Premium required:</strong> High precision (10-50m) is available for Premium+ users. Free users can use 50m+.
-                    </p>
+              {/* Always show a message (prevents jittering) */}
+              <div className="min-h-[60px]">
+                {/* Premium zone: 10-100m */}
+                {selectedRadius < 100 && (
+                  <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-2">
+                    <div className="flex items-start gap-2">
+                      <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-purple-900 dark:text-purple-100">
+                        <strong>Premium Tier:</strong> High precision (10-100m) for building/room-level accuracy. {user?.tier === 'free' && 'Upgrade to unlock!'}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+                
+                {/* Business zone: 100-300m */}
+                {selectedRadius >= 100 && selectedRadius < 300 && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
+                    <div className="flex items-start gap-2">
+                      <Crown className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-blue-900 dark:text-blue-100">
+                        <strong>Business Tier:</strong> Medium precision (100-300m) for city block accuracy. {(user?.tier === 'free' || user?.tier === 'premium') && 'Upgrade to unlock!'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Free zone: 300-500m */}
+                {selectedRadius >= 300 && (
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2">
+                    <div className="flex items-start gap-2">
+                      <div className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0">🆓</div>
+                      <p className="text-xs text-green-900 dark:text-green-100">
+                        <strong>Free Tier:</strong> General area (300-500m) - available to all users. Perfect for neighborhood-wide drops!
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
               
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 {selectedRadius <= 25 && '🏢 Building precision'}
                 {selectedRadius > 25 && selectedRadius <= 100 && '🏙️ City block accuracy'}
-                {selectedRadius > 100 && '🗺️ General area access'}
+                {selectedRadius > 100 && selectedRadius <= 300 && '🏛️ District level'}
+                {selectedRadius > 300 && '🗺️ General area access'}
               </div>
             </div>
           </div>

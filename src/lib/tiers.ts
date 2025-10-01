@@ -7,7 +7,7 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   free: {
     maxFileSizeMB: 10,
     defaultExpiryDays: 30,
-    minRadiusM: 50,
+    minRadiusM: 300, // Free users: 300-500m only
     maxRadiusM: 500,
     canUsePrivateSpots: true,
     canUsePhysicalMode: false, // ❌ Cannot use physical mode
@@ -16,8 +16,8 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   premium: {
     maxFileSizeMB: 100,
     defaultExpiryDays: 365,
-    minRadiusM: 10,
-    maxRadiusM: 1000,
+    minRadiusM: 10, // Premium: 10-100m
+    maxRadiusM: 100,
     canUsePrivateSpots: true,
     canUsePhysicalMode: true, // ✅ Can use physical mode
     maxDrops: 100
@@ -25,8 +25,8 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   business: {
     maxFileSizeMB: 500,
     defaultExpiryDays: -1, // Unlimited
-    minRadiusM: 5,
-    maxRadiusM: 5000,
+    minRadiusM: 100, // Business: 100-300m
+    maxRadiusM: 300,
     canUsePrivateSpots: true,
     canUsePhysicalMode: true, // ✅ Can use physical mode
     maxDrops: 1000
@@ -188,7 +188,7 @@ export const TIER_INFO: Record<UserTier, {
     features: [
       '10 drops max',
       '10MB file limit',
-      '50-500m radius',
+      '300-500m radius only',
       'Remote unlock only',
       '30 day expiry'
     ]
@@ -200,7 +200,7 @@ export const TIER_INFO: Record<UserTier, {
     features: [
       '100 drops max',
       '100MB file limit',
-      '10-1000m radius',
+      '10-100m high precision',
       '✅ Physical unlock',
       '365 day expiry'
     ]
@@ -212,7 +212,7 @@ export const TIER_INFO: Record<UserTier, {
     features: [
       '1000 drops max',
       '500MB file limit',
-      '5-5000m radius',
+      '100-300m precision',
       '✅ Physical unlock',
       'Unlimited expiry'
     ]
