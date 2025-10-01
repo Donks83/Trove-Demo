@@ -301,7 +301,7 @@ export default function DropsPage() {
                       'inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
                       drop.tier === 'free' && 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
                       drop.tier === 'premium' && 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-                      drop.tier === 'business' && 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                      drop.tier === 'paid' && 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
                     )}>
                       {drop.tier}
                     </div>
