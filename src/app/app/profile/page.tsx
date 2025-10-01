@@ -41,7 +41,7 @@ export default function ProfilePage() {
     switch (user.tier) {
       case 'premium':
         return <Crown className="w-5 h-5 text-purple-500" />
-      case 'business':
+      case 'paid':
         return <Users className="w-5 h-5 text-blue-500" />
       default:
         return <User className="w-5 h-5 text-gray-500" />
@@ -52,8 +52,8 @@ export default function ProfilePage() {
     switch (user.tier) {
       case 'premium':
         return 'Premium'
-      case 'business':
-        return 'Business'
+      case 'paid':
+        return 'Paid Tier'
       default:
         return 'Free Explorer'
     }
