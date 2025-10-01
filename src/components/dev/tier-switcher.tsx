@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Crown, CreditCard, Shield, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/components/auth-provider'
@@ -14,12 +14,14 @@ import type { UserTier } from '@/types'
 export function DevTierSwitcher() {
   const { user, updateUserProfile } = useAuth()
   const [updating, setUpdating] = useState(false)
+  const [shouldShow, setShouldShow] = useState(false)
 
-  if (process.env.NODE_ENV !== 'development') {
-    return null // Don't show in production
-  }
+  // Check if should show on client-side only (prevents hydration mismatch)
+  useEffect(() => {
+    setShouldShow(process.env.NODE_ENV === 'development')
+  }, [])
 
-  if (!user) {
+  if (!shouldShow || !user) {
     return null
   }
 
