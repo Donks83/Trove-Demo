@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useDropzone } from 'react-dropzone'
-import { X, Upload, MapPin, Clock, Eye, EyeOff, AlertCircle, Users, Crown, QrCode, Copy, Check, Radio, Wifi, Navigation, Sparkles, Lock } from 'lucide-react'
+import { X, Upload, MapPin, Clock, Eye, EyeOff, AlertCircle, Users, Crown, QrCode, Copy, Check, Radio, Wifi, Navigation, Sparkles, Lock, EyeOffIcon, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -32,7 +32,8 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
   const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
   const [showSecret, setShowSecret] = useState(false)
-  const [dropType, setDropType] = useState<'private' | 'public' | 'hunt'>('private')
+  const [dropType, setDropType] = useState<'private' | 'public' | 'hunt'>('public')
+  const [accessControl, setAccessControl] = useState<'shared' | 'private'>('shared')
   const [showHuntForm, setShowHuntForm] = useState(false)
   const [huntCode, setHuntCode] = useState<string>('')
   const [huntQRCode, setHuntQRCode] = useState<string>('')
@@ -52,8 +53,8 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
       secret: '',
       coords: selectedLocation || { lat: 0, lng: 0 },
       geofenceRadiusM: selectedRadius,
-      scope: 'private',
-      dropType: 'private',
+      scope: 'public',
+      dropType: 'public',
       retrievalMode: 'remote',
     },
   })
@@ -107,23 +108,21 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
     }
   }
 
-  // Update form when drop type changes
+  // Update form when drop type or access control changes
   useEffect(() => {
-    form.setValue('dropType', dropType)
-    
-    // Set scope based on drop type
-    if (dropType === 'private') {
-      form.setValue('scope', 'private') // Private drops are not visible on map
-    } else if (dropType === 'public') {
-      form.setValue('scope', 'public') // Public drops are visible on map
-    } else if (dropType === 'hunt') {
-      form.setValue('scope', 'private') // Hunt drops are private
+    if (dropType === 'hunt') {
+      form.setValue('dropType', 'hunt')
+      form.setValue('scope', 'private') // Hunt drops are always private
       form.setValue('retrievalMode', 'physical')
       if (!huntCode) {
         generateHuntCode()
       }
+    } else {
+      // Map visibility (dropType) and access control (scope) independently
+      form.setValue('dropType', dropType) // 'private' = hidden, 'public' = visible
+      form.setValue('scope', accessControl === 'private' ? 'private' : 'public')
     }
-  }, [dropType, form, huntCode])
+  }, [dropType, accessControl, form, huntCode])
 
   // Sync form radius with selected radius from map slider
   useEffect(() => {
@@ -280,6 +279,7 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
       setHuntCode('')
       setHuntQRCode('')
       setDropType('private')
+      setAccessControl('shared')
       setShowHuntForm(false)
       setHuntDifficulty('beginner')
     } catch (error: any) {
@@ -308,10 +308,10 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
-            {/* Drop Type Selection */}
+            {/* Visibility Selection */}
             <div className="space-y-4">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Drop Type
+                Visibility
               </label>
               <div className="grid grid-cols-3 gap-3">
                 <button
@@ -325,11 +325,11 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                      <Lock className="w-4 h-4 text-white" />
+                      <EyeOffIcon className="w-4 h-4 text-white" />
                     </div>
                     <div className="text-center">
-                      <div className="font-medium text-sm">Private</div>
-                      <div className="text-xs text-gray-500">Hidden pins</div>
+                      <div className="font-medium text-sm">Hidden</div>
+                      <div className="text-xs text-gray-500">Not on map</div>
                     </div>
                   </div>
                 </button>
@@ -345,11 +345,11 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                      <Users className="w-4 h-4 text-white" />
+                      <Eye className="w-4 h-4 text-white" />
                     </div>
                     <div className="text-center">
                       <div className="font-medium text-sm">Public</div>
-                      <div className="text-xs text-gray-500">Open sharing</div>
+                      <div className="text-xs text-gray-500">Visible on map</div>
                     </div>
                   </div>
                 </button>
@@ -391,23 +391,23 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                 </button>
               </div>
               
-              {/* Drop type descriptions */}
+              {/* Visibility descriptions */}
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-sm">
                 {dropType === 'private' && (
                   <div>
-                    <strong>Private drops</strong> are hidden from the map. To retrieve files, users need the correct secret phrase AND must be within the radius you set. Available to all tiers.
+                    <strong>Hidden drops</strong> are not displayed as pins on the map. 
+                    People need to know the exact coordinates to find them. Great for secret sharing!
                   </div>
                 )}
                 {dropType === 'public' && (
                   <div>
                     <strong>Public drops</strong> are visible as pins on the map for anyone to discover. 
-                    To unlock files, users still need the correct secret phrase AND must be within the radius. Available to all tiers.
+                    Perfect for geocaching and public treasure hunts!
                   </div>
                 )}
                 {dropType === 'hunt' && (
                   <div>
                     <strong>Hunt drops</strong> create gamified experiences with proximity hints for invited participants only. 
-                    Perfect for team building and interactive adventures. 
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded text-xs ml-2">
                       <Crown className="w-3 h-3" />
                       Premium+ only
@@ -415,6 +415,133 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Access Control - only show for hidden/public (not hunt) */}
+            {dropType !== 'hunt' && (
+              <div className="space-y-4">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Who Can Unlock
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAccessControl('shared')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      accessControl === 'shared'
+                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Share2 className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-sm">Shared</div>
+                        <div className="text-xs text-gray-500">Anyone with secret</div>
+                      </div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setAccessControl('private')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      accessControl === 'private'
+                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Lock className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-sm">Private</div>
+                        <div className="text-xs text-gray-500">Only you</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+                
+                {/* What You're Creating Summary */}
+                <div className={cn(
+                  "rounded-lg p-4 border-2",
+                  dropType === 'private' && accessControl === 'shared' && "bg-blue-50 dark:bg-blue-900/20 border-blue-500",
+                  dropType === 'private' && accessControl === 'private' && "bg-gray-50 dark:bg-gray-800 border-gray-400",
+                  dropType === 'public' && accessControl === 'shared' && "bg-green-50 dark:bg-green-900/20 border-green-500",
+                  dropType === 'public' && accessControl === 'private' && "bg-orange-50 dark:bg-orange-900/20 border-orange-500"
+                )}>
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl">💡</div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-sm mb-2">What you're creating:</h4>
+                      
+                      {dropType === 'private' && accessControl === 'shared' && (
+                        <div>
+                          <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                            🔐 Secret Drop (Hidden + Shared)
+                          </p>
+                          <p className="text-xs text-gray-700 dark:text-gray-300">
+                            <strong>Not shown on map</strong> but <strong>anyone with coordinates and secret phrase can unlock it</strong>. 
+                            Perfect for sharing files with friends without broadcasting the location publicly.
+                          </p>
+                          <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
+                            <strong>Example:</strong> "Here are the photos from our trip! Go to 51.5074, -0.1278 and use secret 'summer2024'"
+                          </p>
+                        </div>
+                      )}
+                      
+                      {dropType === 'private' && accessControl === 'private' && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+                            🔒 Personal Bookmark (Hidden + Private)
+                          </p>
+                          <p className="text-xs text-gray-700 dark:text-gray-300">
+                            <strong>Not shown on map</strong> and <strong>only YOU can access it</strong>. 
+                            Perfect for personal file storage, location bookmarks, or private notes.
+                          </p>
+                          <p className="text-xs text-gray-700 dark:text-gray-400 mt-2">
+                            <strong>Example:</strong> Save documents at your office location for quick access later
+                          </p>
+                        </div>
+                      )}
+                      
+                      {dropType === 'public' && accessControl === 'shared' && (
+                        <div>
+                          <p className="text-sm font-medium text-green-900 dark:text-green-100 mb-1">
+                            🌍 Public Drop (Visible + Shared)
+                          </p>
+                          <p className="text-xs text-gray-700 dark:text-gray-300">
+                            <strong>Visible as a pin on the map</strong> and <strong>anyone with the secret phrase can unlock it</strong>. 
+                            Perfect for geocaching, public treasure hunts, and community sharing.
+                          </p>
+                          <p className="text-xs text-green-700 dark:text-green-300 mt-2">
+                            <strong>Example:</strong> Place a pin at a scenic viewpoint with photos and info for anyone to discover
+                          </p>
+                        </div>
+                      )}
+                      
+                      {dropType === 'public' && accessControl === 'private' && (
+                        <div>
+                          <p className="text-sm font-medium text-orange-900 dark:text-orange-100 mb-1">
+                            👁️ Visible but Locked (Visible + Private)
+                          </p>
+                          <p className="text-xs text-gray-700 dark:text-gray-300">
+                            <strong>Visible as a pin on the map</strong> but <strong>only YOU can unlock it</strong>. 
+                            Others can see the drop exists but can't access the files.
+                          </p>
+                          <p className="text-xs text-orange-700 dark:text-orange-300 mt-2">
+                            <strong>Example:</strong> Mark locations you've visited without sharing the actual files
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             </div>
 
             {/* Hunt Configuration - only show if hunt type selected */}
