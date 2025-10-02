@@ -307,7 +307,7 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
             Create a new {dropType === 'hunt' ? 'treasure hunt' : 'drop'} at {selectedLocation?.lat.toFixed(6)}, {selectedLocation?.lng.toFixed(6)}
           </div>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
             {/* Drop Type Selection */}
             <div className="space-y-4">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -562,6 +562,12 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
               </label>
               <Input
                 placeholder={dropType === 'hunt' ? 'e.g., Find the coffee machine treasure!' : 'Enter drop title...'}
+                autoComplete="off"
+                data-lpignore="true"
+                data-1p-ignore="true"
+                data-bwignore="true"
+                data-form-type="other"
+                name="drop-display-title"
                 {...form.register('title')}
               />
               {form.formState.errors.title && (
@@ -578,6 +584,12 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                 placeholder={dropType === 'hunt' ? 'Give hunters a hint about this location...' : 'Optional description...'}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                 rows={3}
+                autoComplete="off"
+                data-lpignore="true"
+                data-1p-ignore="true"
+                data-bwignore="true"
+                data-form-type="other"
+                name="drop-description-text"
                 {...form.register('description')}
               />
               {form.formState.errors.description && (
@@ -596,7 +608,18 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                   placeholder={dropType === 'hunt' ? 'e.g., coffee time' : 'Enter secret phrase...'}
                   className="pr-10"
                   autoComplete="new-password"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                   data-lpignore="true"
+                  data-1p-ignore="true"
+                  data-bwignore="true"
+                  data-form-type="other"
+                  data-1password-ignore="true"
+                  name="x-drop-phrase-field"
+                  id="x-drop-phrase-field"
+                  readOnly
+                  onFocus={(e) => e.target.removeAttribute('readonly')}
                   {...form.register('secret')}
                 />
                 <button

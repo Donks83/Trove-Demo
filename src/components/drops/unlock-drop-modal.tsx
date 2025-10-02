@@ -268,10 +268,8 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
             </div>
           </div>
         ) : (
-          // Form state - FIXED: prevent password save prompts
+          // Form state - prevent password save prompts
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
-            {/* Hidden field to prevent browser password detection */}
-            <input type="text" name="fake-username" style={{ display: 'none' }} autoComplete="username" />
             
             {/* Location status */}
             {drop?.coords && (
@@ -334,7 +332,7 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
               </div>
             )}
 
-            {/* Secret phrase input - FIXED: prevent password save prompts */}
+            {/* Secret phrase input */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Secret phrase *
@@ -344,13 +342,19 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
                   type={showSecret ? "text" : "password"}
                   placeholder="Enter secret phrase"
                   {...form.register('secret')}
-                  autoComplete="off"
+                  autoComplete="new-password"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                   data-form-type="other"
                   data-lpignore="true"
                   data-1p-ignore="true"
-                  spellCheck="false"
+                  data-bwignore="true"
+                  data-1password-ignore="true"
                   className="pr-10"
-                  name="treasure-secret-phrase"
+                  name="x-secret-phrase-field"
+                  readOnly
+                  onFocus={(e) => e.target.removeAttribute('readonly')}
                 />
                 <button
                   type="button"

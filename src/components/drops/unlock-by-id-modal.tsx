@@ -125,6 +125,10 @@ export function UnlockByIdModal({ isOpen, onClose, onSuccess }: UnlockByIdModalP
               onChange={(e) => setDropId(e.target.value)}
               autoComplete="off"
               data-lpignore="true"
+              data-1p-ignore="true"
+              data-bwignore="true"
+              data-form-type="other"
+              name="x-drop-identifier"
             />
             <p className="text-xs text-gray-500">
               The unique identifier for the drop
@@ -141,8 +145,18 @@ export function UnlockByIdModal({ isOpen, onClose, onSuccess }: UnlockByIdModalP
               placeholder="Enter secret phrase"
               value={secret}
               onChange={(e) => setSecret(e.target.value)}
-              autoComplete="off"
+              autoComplete="new-password"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
               data-lpignore="true"
+              data-1p-ignore="true"
+              data-bwignore="true"
+              data-form-type="other"
+              data-1password-ignore="true"
+              name="x-unlock-phrase-field"
+              readOnly
+              onFocus={(e) => e.target.removeAttribute('readonly')}
             />
             <p className="text-xs text-gray-500">
               The secret phrase provided by the creator

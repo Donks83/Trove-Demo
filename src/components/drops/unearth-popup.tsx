@@ -332,9 +332,18 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
                   onKeyDown={handleKeyDown}
                   autoFocus
                   autoComplete="new-password"
-                  data-lpignore="true"
+                  autoCorrect="off"
+                  autoCapitalize="off"
                   spellCheck="false"
+                  data-lpignore="true"
+                  data-1p-ignore="true"
+                  data-bwignore="true"
+                  data-form-type="other"
+                  data-1password-ignore="true"
+                  name="x-unearth-phrase-field"
                   className="w-full pr-10"
+                  readOnly
+                  onFocus={(e) => e.target.removeAttribute('readonly')}
                 />
                 <button
                   type="button"
