@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, MapPin, Eye, Download, Edit, Trash2, Clock, Globe, Lock, Search, Filter } from 'lucide-react'
+import { Plus, MapPin, Eye, Download, Edit, Trash2, Clock, Globe, Lock, Search, Filter, Copy, Check, Share2, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/components/auth-provider'
@@ -12,6 +12,7 @@ import { TIER_DISPLAY_NAMES, TIER_COLORS } from '@/lib/tiers'
 import type { Drop } from '@/types'
 import { cn } from '@/lib/utils'
 import { EditDropModal } from '@/components/edit-drop-modal'
+import { ShareDropSuccessModal } from '@/components/drops/share-drop-success-modal'
 
 // Helper function to safely convert dates from API responses
 function toDateObject(dateValue: any): Date {
@@ -40,6 +41,9 @@ export default function DropsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterScope, setFilterScope] = useState<'all' | 'public' | 'private'>('all')
   const [editingDrop, setEditingDrop] = useState<Drop | null>(null)
+  const [sharingDrop, setSharingDrop] = useState<Drop | null>(null)
+  const [expandedDropIds, setExpandedDropIds] = useState<Set<string>>(new Set())
+  const [copiedDropId, setCopiedDropId] = useState<string | null>(null)
 
   const fetchUserDrops = useCallback(async () => {
     if (!user || !firebaseUser) return
@@ -122,6 +126,36 @@ export default function DropsPage() {
       toast({
         title: 'Error',
         description: error.message || 'Failed to delete drop',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const toggleDropId = (dropId: string) => {
+    setExpandedDropIds(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(dropId)) {
+        newSet.delete(dropId)
+      } else {
+        newSet.add(dropId)
+      }
+      return newSet
+    })
+  }
+
+  const copyDropId = async (dropId: string) => {
+    try {
+      await navigator.clipboard.writeText(dropId)
+      setCopiedDropId(dropId)
+      toast({
+        title: 'Drop ID copied',
+        description: 'Drop ID has been copied to your clipboard',
+      })
+      setTimeout(() => setCopiedDropId(null), 2000)
+    } catch (error) {
+      toast({
+        title: 'Failed to copy',
+        description: 'Could not copy Drop ID to clipboard',
         variant: 'destructive',
       })
     }
@@ -357,9 +391,52 @@ export default function DropsPage() {
                     </span>
                   )}
                 </div>
+
+                {/* Drop ID Section */}
+                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <button
+                    onClick={() => toggleDropId(drop.id)}
+                    className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors w-full"
+                  >
+                    {expandedDropIds.has(drop.id) ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
+                    <span className="font-medium">Drop ID</span>
+                  </button>
+                  {expandedDropIds.has(drop.id) && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <code className="flex-1 text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1.5 rounded font-mono text-gray-900 dark:text-gray-100 break-all">
+                        {drop.id}
+                      </code>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyDropId(drop.id)}
+                        className="flex-shrink-0"
+                      >
+                        {copiedDropId === drop.id ? (
+                          <Check className="w-3 h-3 text-green-600" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setSharingDrop(drop)}
+                >
+                  <Share2 className="w-4 h-4 mr-1" />
+                  Share
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -398,6 +475,17 @@ export default function DropsPage() {
           }}
           firebaseUser={firebaseUser}
           userTier={user?.tier || 'free'}
+        />
+      )}
+
+      {/* Share Modal */}
+      {sharingDrop && (
+        <ShareDropSuccessModal
+          isOpen={!!sharingDrop}
+          onClose={() => setSharingDrop(null)}
+          dropId={sharingDrop.id}
+          dropTitle={sharingDrop.title}
+          dropType={sharingDrop.dropType}
         />
       )}
     </div>
