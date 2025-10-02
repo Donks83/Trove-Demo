@@ -57,8 +57,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       return addCorsHeaders(response)
     }
 
-    // Hash the secret
-    const secretHash = createHash('sha256').update(secret.trim().toLowerCase()).digest('hex')
+    // Hash the secret (case-sensitive)
+    const secretHash = createHash('sha256').update(secret.trim()).digest('hex')
 
     // Get the drop from Firestore or demo storage
     let drop = await getDrop(dropId)

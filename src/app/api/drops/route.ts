@@ -145,8 +145,8 @@ export async function POST(request: NextRequest) {
     // Create a functional drop that gets stored and can be unearthed
     const dropId = `drop_${Date.now()}_${randomBytes(4).toString('hex')}`
     
-    // Hash the secret for storage (simplified for demo)
-    const secretHash = createHash('sha256').update(secret.trim().toLowerCase()).digest('hex')
+    // Hash the secret for storage (case-sensitive)
+    const secretHash = createHash('sha256').update(secret.trim()).digest('hex')
     
     // Process uploaded files
     const processedFiles = await Promise.all(

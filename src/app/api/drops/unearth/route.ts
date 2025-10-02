@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
     // Verify user (optional but recommended for private drops)
     const user = await verifyAuthToken(request)
     
-    const secretToCheck = secret.trim().toLowerCase()
+    const secretToCheck = secret.trim()
     
-    // Hash the provided secret to compare with stored hashes
+    // Hash the provided secret to compare with stored hashes (case-sensitive)
     const secretHash = createHash('sha256').update(secretToCheck).digest('hex')
     
     console.log('Looking for drops near:', coords || 'no location provided')

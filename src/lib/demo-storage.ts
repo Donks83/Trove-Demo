@@ -1,9 +1,9 @@
 import { createHash } from 'crypto'
 import type { TreasureHunt, HuntParticipant } from '@/types'
 
-// Helper function to hash secret phrases consistently
+// Helper function to hash secret phrases consistently (case-sensitive)
 function hashSecret(secret: string): string {
-  return createHash('sha256').update(secret.trim().toLowerCase()).digest('hex')
+  return createHash('sha256').update(secret.trim()).digest('hex')
 }
 
 // In-memory storage for demo drops (in production this would be a database)
@@ -141,43 +141,6 @@ let demoDropsStore: any[] = [
         size: 4096,
         type: 'text/plain',
         downloadUrl: '/api/drops/hunt-drop-3/files/treasure-hunting-tips.txt'
-      }
-    ]
-  },
-  {
-    id: 'test-drop-3',
-    title: 'Files for Dave Sharp',
-    description: 'Demo drop for Dave Sharp. Secret: "Fake Believe"',
-    coords: { lat: 54.577000, lng: -1.230000, geohash: 'gcyej7' },
-    geofenceRadiusM: 75,
-    tier: 'premium',
-    scope: 'public',
-    dropType: 'public',
-    retrievalMode: 'remote',
-    stats: { views: 12, unlocks: 5 },
-    createdAt: new Date(),
-    secretHash: hashSecret('Fake Believe'),
-    files: [
-      {
-        id: 'file7',
-        name: 'dave-sharp-documents.pdf',
-        size: 2097152,
-        type: 'application/pdf',
-        downloadUrl: '/api/drops/test-drop-3/files/dave-sharp-documents.pdf'
-      },
-      {
-        id: 'file8',
-        name: 'project-notes.docx',
-        size: 1048576,
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        downloadUrl: '/api/drops/test-drop-3/files/project-notes.docx'
-      },
-      {
-        id: 'file9',
-        name: 'meeting-recording.mp3',
-        size: 15728640,
-        type: 'audio/mpeg',
-        downloadUrl: '/api/drops/test-drop-3/files/meeting-recording.mp3'
       }
     ]
   }
