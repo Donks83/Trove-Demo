@@ -487,58 +487,62 @@ export function MapView({ className }: MapViewProps) {
         )}
 
         {/* Bottom Action Bar */}
-        <div className="bottom-action-bar p-4">
-          <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-xl p-4 shadow-lg max-w-2xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+        <div className="bottom-action-bar p-3">
+          <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-xl shadow-lg max-w-5xl mx-auto">
+            <div className="flex items-center justify-between gap-4 px-4 py-2.5">
+              {/* Left side: Status info */}
+              <div className="flex items-center gap-3 flex-1 min-w-0">
                 {user && (
-                  <div className="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
-                    {user.tier === 'free' && '🆓 Free Explorer'}
+                  <div className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary flex-shrink-0">
+                    {user.tier === 'free' && '🆓 Free'}
                     {user.tier === 'premium' && '👑 Premium'}
-                    {user.tier === 'paid' && '💳 Paid Tier'}
-                    {process.env.NODE_ENV === 'development' && ' (Dev Mode)'}
+                    {user.tier === 'paid' && '💳 Paid'}
                   </div>
                 )}
-                <span className="text-sm text-gray-600 dark:text-gray-300">
+                <span className="text-xs text-gray-600 dark:text-gray-300 truncate">
                   {!user 
                     ? 'Sign in to create drops and start treasure hunting! 🏴‍☠️'
                     : mode === 'bury'
                       ? selectedLocation 
-                        ? '📍 Pin placed! Click "Bury Files" to upload and hide your treasure.' 
-                        : '🎯 BURY MODE: Click anywhere on the map to place a drop. Private/Public drops give NO hints. Only Hunt drops provide proximity hints to code holders.'
+                        ? '📍 Pin placed! Click "Bury Files" to hide your treasure.' 
+                        : '🎯 Click map to place drop. Hunt drops give proximity hints to code holders.'
                       : unearthLocation
-                        ? '🔍 Enter the secret phrase to unearth files at this location. Good luck, treasure hunter!'
-                        : '🗺️ UNEARTH MODE: Click anywhere on the map to search for buried files. Join treasure hunts for proximity hints!'
+                        ? '🔍 Enter secret phrase to unearth files.'
+                        : '🗺️ Click map to search for buried files. Join hunts for proximity hints!'
                   }
                 </span>
               </div>
               
-              <div className="flex gap-2">
+              {/* Right side: Action buttons */}
+              <div className="flex gap-2 flex-shrink-0">
                 {mode === 'bury' ? (
                   <>
                     <Button
                       onClick={() => setShowJoinHuntModal(true)}
                       variant="outline"
-                      className="flex items-center gap-2"
+                      size="sm"
+                      className="flex items-center gap-1.5"
                       disabled={!user}
                     >
-                      <Crown className="w-4 h-4" />
-                      Join Hunt
+                      <Crown className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Join Hunt</span>
                     </Button>
                     <Button
                       onClick={() => setShowUnlockByIdModal(true)}
                       variant="outline"
-                      className="flex items-center gap-2"
+                      size="sm"
+                      className="flex items-center gap-1.5"
                     >
-                      <Lock className="w-4 h-4" />
-                      Unlock by Drop ID
+                      <Lock className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Unlock by ID</span>
                     </Button>
                     <Button
                       onClick={handleCreateDrop}
                       disabled={!selectedLocation || !user}
-                      className="flex items-center gap-2"
+                      size="sm"
+                      className="flex items-center gap-1.5"
                     >
-                      <Upload className="w-4 h-4" />
+                      <Upload className="w-3.5 h-3.5" />
                       Bury Files
                     </Button>
                   </>
@@ -547,20 +551,22 @@ export function MapView({ className }: MapViewProps) {
                     <Button
                       onClick={() => setShowJoinHuntModal(true)}
                       variant="outline"
-                      className="flex items-center gap-2"
+                      size="sm"
+                      className="flex items-center gap-1.5"
                       disabled={!user}
                     >
-                      <Crown className="w-4 h-4" />
-                      Join Hunt
+                      <Crown className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Join Hunt</span>
                     </Button>
                     <Button
                       onClick={() => setShowUnlockByIdModal(true)}
                       variant="outline"
-                      className="flex items-center gap-2"
+                      size="sm"
+                      className="flex items-center gap-1.5"
                       disabled={!user}
                     >
-                      <Lock className="w-4 h-4" />
-                      Unlock by Drop ID
+                      <Lock className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Unlock by ID</span>
                     </Button>
                   </>
                 )}
