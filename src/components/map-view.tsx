@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Navigation } from '@/components/navigation'
 import { CreateDropModal } from '@/components/drops/create-drop-modal'
 import { UnlockDropModal } from '@/components/drops/unlock-drop-modal'
+import { UnlockByIdModal } from '@/components/drops/unlock-by-id-modal'
 import { UnearthPopup } from '@/components/drops/unearth-popup'
 import { JoinHuntModal } from '@/components/hunts/join-hunt-modal'
 import { DevTierSwitcher } from '@/components/dev/tier-switcher'
@@ -38,6 +39,7 @@ export function MapView({ className }: MapViewProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showUnlockModal, setShowUnlockModal] = useState(false)
+  const [showUnlockByIdModal, setShowUnlockByIdModal] = useState(false)
   const [showUnearthPopup, setShowUnearthPopup] = useState(false)
   const [showJoinHuntModal, setShowJoinHuntModal] = useState(false)
   const [unearthResult, setUnearthResult] = useState<any>(null)
@@ -144,6 +146,20 @@ export function MapView({ className }: MapViewProps) {
   const handleUnearthClose = () => {
     setShowUnearthPopup(false)
     setUnearthLocation(null)
+  }
+
+  const handleUnlockByIdSuccess = (result: any) => {
+    // Show the unlocked drop in the unlock modal
+    const unearthedDrop: Partial<Drop> = {
+      id: result.metadata?.dropId || 'unlocked-drop',
+      title: result.metadata?.title || 'Unlocked Drop',
+      description: result.metadata?.description,
+      stats: { views: 0, unlocks: 0 }
+    }
+    
+    setSelectedDrop(unearthedDrop)
+    setUnearthResult(result)
+    setShowUnlockModal(true)
   }
 
   // Search functionality
@@ -510,12 +526,12 @@ export function MapView({ className }: MapViewProps) {
                       Join Hunt
                     </Button>
                     <Button
-                      onClick={() => setShowUnlockModal(true)}
+                      onClick={() => setShowUnlockByIdModal(true)}
                       variant="outline"
                       className="flex items-center gap-2"
                     >
                       <Lock className="w-4 h-4" />
-                      Unlock
+                      Unlock by Drop ID
                     </Button>
                     <Button
                       onClick={handleCreateDrop}
@@ -538,13 +554,13 @@ export function MapView({ className }: MapViewProps) {
                       Join Hunt
                     </Button>
                     <Button
-                      onClick={() => setShowUnlockModal(true)}
+                      onClick={() => setShowUnlockByIdModal(true)}
                       variant="outline"
                       className="flex items-center gap-2"
                       disabled={!user}
                     >
                       <Lock className="w-4 h-4" />
-                      Unlock by Drop
+                      Unlock by Drop ID
                     </Button>
                   </>
                 )}
@@ -574,6 +590,12 @@ export function MapView({ className }: MapViewProps) {
         }}
         drop={selectedDrop || undefined}
         unlockResult={unearthResult}
+      />
+
+      <UnlockByIdModal
+        isOpen={showUnlockByIdModal}
+        onClose={() => setShowUnlockByIdModal(false)}
+        onSuccess={handleUnlockByIdSuccess}
       />
 
       <UnearthPopup

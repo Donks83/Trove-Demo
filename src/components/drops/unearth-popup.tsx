@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MapPin, Search, X, Lock, Eye, EyeOff } from 'lucide-react'
+import { MapPin, Search, X, Lock, Eye, EyeOff, Navigation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DisambiguationModal } from '@/components/drops/disambiguation-modal'
@@ -25,8 +25,72 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
   const [showDisambiguation, setShowDisambiguation] = useState(false)
   const [dropOptions, setDropOptions] = useState<any[]>([])
   const [disambiguationLoading, setDisambiguationLoading] = useState(false)
+  const [usingGPS, setUsingGPS] = useState(false)
+  const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [gpsError, setGpsError] = useState<string | null>(null)
 
   if (!isVisible || !location) return null
+
+  const handleUseMyLocation = () => {
+    setGpsError(null)
+    setUsingGPS(true)
+    
+    if (!navigator.geolocation) {
+      setGpsError('Geolocation is not supported by your browser')
+      setUsingGPS(false)
+      toast({
+        title: 'GPS not supported',
+        description: 'Your browser doesn\'t support geolocation',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        setGpsLocation({ lat: latitude, lng: longitude })
+        setUsingGPS(true)
+        toast({
+          title: 'GPS location acquired',
+          description: 'Now using your actual location for unlocking',
+        })
+      },
+      (error) => {
+        let errorMessage = 'Failed to get your location'
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMessage = 'Location permission denied. Please enable GPS in your browser settings.'
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMessage = 'Location information unavailable'
+        } else if (error.code === error.TIMEOUT) {
+          errorMessage = 'Location request timed out'
+        }
+        
+        setGpsError(errorMessage)
+        setUsingGPS(false)
+        toast({
+          title: 'GPS Error',
+          description: errorMessage,
+          variant: 'destructive',
+        })
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    )
+  }
+
+  const handleUseMapPin = () => {
+    setUsingGPS(false)
+    setGpsLocation(null)
+    setGpsError(null)
+    toast({
+      title: 'Using map pin',
+      description: 'Now using the map pin location',
+    })
+  }
 
   const handleUnearth = async () => {
     if (!secret.trim()) {
@@ -54,6 +118,8 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
       if (!token) throw new Error('No auth token')
 
       // Call the unearth API endpoint
+      const coordsToUse = usingGPS && gpsLocation ? gpsLocation : location
+      
       const response = await fetch('/api/drops/unearth', {
         method: 'POST',
         headers: {
@@ -61,7 +127,7 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          coords: location,
+          coords: coordsToUse,
           secret: secret.trim(),
         }),
       })
@@ -119,6 +185,9 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
     try {
       const token = await firebaseUser!.getIdToken()
       
+      // Use GPS location if available, otherwise use map pin
+      const coordsToUse = usingGPS && gpsLocation ? gpsLocation : location
+      
       // Call the specific drop unlock endpoint
       const response = await fetch(`/api/drops/${dropId}/unlock`, {
         method: 'POST',
@@ -128,7 +197,7 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
         },
         body: JSON.stringify({
           secret: secret.trim(),
-          coords: location,
+          coords: coordsToUse,
         }),
       })
 
@@ -203,6 +272,53 @@ export function UnearthPopup({ isVisible, location, onClose, onSuccess }: Uneart
           </div>
 
           <div className="space-y-3">
+            {/* Location mode selector */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+              <div className="text-xs font-medium text-blue-900 dark:text-blue-100 mb-2">
+                Location Source:
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUseMapPin}
+                  className={`flex-1 ${!usingGPS ? 'bg-blue-100 dark:bg-blue-800 border-blue-500' : ''}`}
+                >
+                  <MapPin className="w-4 h-4 mr-1" />
+                  Map Pin
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUseMyLocation}
+                  className={`flex-1 ${usingGPS ? 'bg-green-100 dark:bg-green-800 border-green-500' : ''}`}
+                >
+                  <Navigation className="w-4 h-4 mr-1" />
+                  My GPS
+                </Button>
+              </div>
+              {usingGPS && gpsLocation && (
+                <div className="mt-2 text-xs text-green-700 dark:text-green-300">
+                  ✓ GPS: {gpsLocation.lat.toFixed(6)}, {gpsLocation.lng.toFixed(6)}
+                </div>
+              )}
+              {usingGPS && !gpsLocation && (
+                <div className="mt-2 text-xs text-yellow-700 dark:text-yellow-300">
+                  Getting your location...
+                </div>
+              )}
+              {gpsError && (
+                <div className="mt-2 text-xs text-red-700 dark:text-red-300">
+                  {gpsError}
+                </div>
+              )}
+              {!usingGPS && (
+                <div className="mt-2 text-xs text-blue-700 dark:text-blue-300">
+                  Using map pin: {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Secret Phrase
