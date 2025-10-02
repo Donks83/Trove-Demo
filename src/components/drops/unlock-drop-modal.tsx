@@ -341,7 +341,6 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
                 <Input
                   type={showSecret ? "text" : "password"}
                   placeholder="Enter secret phrase"
-                  {...form.register('secret')}
                   autoComplete="new-password"
                   autoCorrect="off"
                   autoCapitalize="off"
@@ -352,9 +351,9 @@ export function UnlockDropModal({ isOpen, onClose, drop, dropId, unlockResult: i
                   data-bwignore="true"
                   data-1password-ignore="true"
                   className="pr-10"
-                  name="x-secret-phrase-field"
                   readOnly
                   onFocus={(e) => e.target.removeAttribute('readonly')}
+                  {...form.register('secret')}
                 />
                 <button
                   type="button"

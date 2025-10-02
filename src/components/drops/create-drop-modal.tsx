@@ -567,7 +567,6 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                 data-1p-ignore="true"
                 data-bwignore="true"
                 data-form-type="other"
-                name="drop-display-title"
                 {...form.register('title')}
               />
               {form.formState.errors.title && (
@@ -589,7 +588,6 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                 data-1p-ignore="true"
                 data-bwignore="true"
                 data-form-type="other"
-                name="drop-description-text"
                 {...form.register('description')}
               />
               {form.formState.errors.description && (
@@ -616,8 +614,6 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                   data-bwignore="true"
                   data-form-type="other"
                   data-1password-ignore="true"
-                  name="x-drop-phrase-field"
-                  id="x-drop-phrase-field"
                   readOnly
                   onFocus={(e) => e.target.removeAttribute('readonly')}
                   {...form.register('secret')}
