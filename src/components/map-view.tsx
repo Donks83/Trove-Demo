@@ -312,6 +312,8 @@ export function MapView({ className }: MapViewProps) {
                       setSearchResults([])
                       setShowSearchResults(false)
                     }}
+                    aria-label="Clear search"
+                    title="Clear search"
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                   >
                     <X className="w-4 h-4" />
@@ -523,6 +525,7 @@ export function MapView({ className }: MapViewProps) {
                       size="sm"
                       className="flex items-center gap-1.5"
                       disabled={!user}
+                      aria-label="Join treasure hunt"
                     >
                       <Crown className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Join Hunt</span>
@@ -532,6 +535,7 @@ export function MapView({ className }: MapViewProps) {
                       variant="outline"
                       size="sm"
                       className="flex items-center gap-1.5"
+                      aria-label="Unlock drop by ID"
                     >
                       <Lock className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Unlock by ID</span>
@@ -541,6 +545,7 @@ export function MapView({ className }: MapViewProps) {
                       disabled={!selectedLocation || !user}
                       size="sm"
                       className="flex items-center gap-1.5"
+                      aria-label="Bury files at selected location"
                     >
                       <Upload className="w-3.5 h-3.5" />
                       Bury Files
@@ -554,6 +559,7 @@ export function MapView({ className }: MapViewProps) {
                       size="sm"
                       className="flex items-center gap-1.5"
                       disabled={!user}
+                      aria-label="Join treasure hunt"
                     >
                       <Crown className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Join Hunt</span>
@@ -564,6 +570,7 @@ export function MapView({ className }: MapViewProps) {
                       size="sm"
                       className="flex items-center gap-1.5"
                       disabled={!user}
+                      aria-label="Unlock drop by ID"
                     >
                       <Lock className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Unlock by ID</span>

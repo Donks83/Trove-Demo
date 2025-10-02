@@ -11,6 +11,13 @@ function addCorsHeaders(response: NextResponse) {
   response.headers.set('Access-Control-Allow-Origin', '*')
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  // Prevent caching
+  response.headers.set('Cache-Control', 'no-store, no-cache')
+  response.headers.set('Pragma', 'no-cache')
+  response.headers.set('Expires', '0')
+  // Security headers
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('Content-Type', 'application/json; charset=utf-8')
   return response
 }
 
