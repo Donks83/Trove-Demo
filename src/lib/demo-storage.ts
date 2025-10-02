@@ -1,6 +1,7 @@
 import { createHash } from 'crypto'
 import type { TreasureHunt, HuntParticipant } from '@/types'
 
+// Force rebuild: 2025-01-02T20:30:00Z
 // Helper function to hash secret phrases consistently (case-sensitive)
 function hashSecret(secret: string): string {
   return createHash('sha256').update(secret.trim()).digest('hex')
