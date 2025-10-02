@@ -7,6 +7,9 @@ function hashSecret(secret: string): string {
 }
 
 // In-memory storage for demo drops (in production this would be a database)
+// Using fixed dates to prevent hydration errors
+const DEMO_DATE = new Date('2024-01-15T12:00:00Z')
+
 // eslint-disable-next-line prefer-const
 let demoDropsStore: any[] = [
   {
@@ -20,7 +23,7 @@ let demoDropsStore: any[] = [
     dropType: 'public',
     retrievalMode: 'remote',
     stats: { views: 15, unlocks: 8 },
-    createdAt: new Date(),
+    createdAt: DEMO_DATE,
     secretHash: hashSecret('test123'), // Properly hashed secret
     files: [
       {
@@ -50,7 +53,7 @@ let demoDropsStore: any[] = [
     dropType: 'public',
     retrievalMode: 'physical',
     stats: { views: 23, unlocks: 3 },
-    createdAt: new Date(),
+    createdAt: DEMO_DATE,
     secretHash: hashSecret('location123'),
     files: [
       {
@@ -75,7 +78,7 @@ let demoDropsStore: any[] = [
     huntDifficulty: 'beginner',
     retrievalMode: 'physical',
     stats: { views: 5, unlocks: 2 },
-    createdAt: new Date(),
+    createdAt: DEMO_DATE,
     secretHash: hashSecret('coffee treasure'),
     files: [
       {
@@ -100,7 +103,7 @@ let demoDropsStore: any[] = [
     huntDifficulty: 'expert',
     retrievalMode: 'physical',
     stats: { views: 3, unlocks: 1 },
-    createdAt: new Date(),
+    createdAt: DEMO_DATE,
     secretHash: hashSecret('bridge master'),
     files: [
       {
@@ -125,7 +128,7 @@ let demoDropsStore: any[] = [
     huntDifficulty: 'beginner',
     retrievalMode: 'remote',
     stats: { views: 8, unlocks: 4 },
-    createdAt: new Date(),
+    createdAt: DEMO_DATE,
     secretHash: hashSecret('welcome treasure'),
     files: [
       {
@@ -160,10 +163,10 @@ let demoHuntsStore: TreasureHunt[] = [
     difficulty: 'intermediate',
     status: 'active',
     maxParticipants: 10,
-    startDate: new Date(Date.now() - 24 * 60 * 60 * 1000) as any, // Started yesterday
-    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) as any, // Ends in a week
-    createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000) as any,
-    updatedAt: new Date() as any,
+    startDate: new Date('2024-01-14T12:00:00Z') as any,
+    endDate: new Date('2024-01-22T12:00:00Z') as any,
+    createdAt: new Date('2024-01-13T12:00:00Z') as any,
+    updatedAt: DEMO_DATE as any,
     stats: {
       totalParticipants: 5,
       completedParticipants: 1,
@@ -178,8 +181,8 @@ let demoHuntsStore: TreasureHunt[] = [
     difficulty: 'beginner',
     status: 'draft',
     maxParticipants: 20,
-    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000) as any,
-    updatedAt: new Date() as any,
+    createdAt: new Date('2024-01-14T12:00:00Z') as any,
+    updatedAt: DEMO_DATE as any,
     stats: {
       totalParticipants: 0,
       completedParticipants: 0,
@@ -198,11 +201,11 @@ let demoParticipantsStore: HuntParticipant[] = [
     email: 'alice@company.com',
     displayName: 'Alice Johnson',
     status: 'joined',
-    joinedAt: new Date(Date.now() - 20 * 60 * 60 * 1000) as any,
+    joinedAt: new Date('2024-01-14T16:00:00Z') as any,
     progress: {
       dropsFound: 2,
       totalDrops: 2,
-      lastActivityAt: new Date(Date.now() - 2 * 60 * 60 * 1000) as any
+      lastActivityAt: new Date('2024-01-15T10:00:00Z') as any
     }
   },
   {
@@ -212,11 +215,11 @@ let demoParticipantsStore: HuntParticipant[] = [
     email: 'bob@company.com',
     displayName: 'Bob Smith',
     status: 'joined',
-    joinedAt: new Date(Date.now() - 18 * 60 * 60 * 1000) as any,
+    joinedAt: new Date('2024-01-14T18:00:00Z') as any,
     progress: {
       dropsFound: 1,
       totalDrops: 2,
-      lastActivityAt: new Date(Date.now() - 4 * 60 * 60 * 1000) as any
+      lastActivityAt: new Date('2024-01-15T08:00:00Z') as any
     }
   },
   {
