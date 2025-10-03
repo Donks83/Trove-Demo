@@ -542,7 +542,6 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                 </div>
               </div>
             )}
-            </div>
 
             {/* Hunt Configuration - only show if hunt type selected */}
             {dropType === 'hunt' && (
