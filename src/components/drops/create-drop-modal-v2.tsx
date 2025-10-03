@@ -13,7 +13,7 @@ import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/ui/toaster'
 import { toast as sonnerToast } from 'sonner'
 import { createDropSchema } from '@/lib/validations'
-import { getTierLimits, validateDropForTier, getUpgradeBenefits } from '@/lib/tiers'
+import { getTierLimits, validateDropForTier, getUpgradeBenefits, getExpiryDays } from '@/lib/tiers'
 import { formatDistance } from '@/lib/geo'
 import type { CreateDropInput } from '@/lib/validations'
 import { cn } from '@/lib/utils'
@@ -556,5 +556,453 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
               </div>
             )}
 
-            {/* Rest of the form continues... (File Upload, Title, Description, etc.) */}
-            {/* I'll add the rest in the next part to keep this manageable */}
+            {/* File Upload */}
+            <div className="space-y-4">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {visibility === 'hunt' ? 'Treasure files to hide' : 'Files to bury'}
+              </label>
+              
+              <div
+                {...getRootProps()}
+                className={cn(
+                  'border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer',
+                  isDragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary',
+                  'dropzone'
+                )}
+              >
+                <input {...getInputProps()} />
+                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  {isDragActive ? 'Drop files here' : 'Drop files here or click to upload'}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Max {tierLimits.maxFileSizeMB}MB total for {user?.tier} tier
+                </p>
+              </div>
+
+              {files.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Selected files ({files.length}):</h4>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {files.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded p-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {(file.size / (1024 * 1024)).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Total: {totalFileSize.toFixed(2)} MB / {tierLimits.maxFileSizeMB} MB
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Title */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {visibility === 'hunt' ? 'Hunt title (clue description)' : 'Title'} *
+              </label>
+              <Input
+                placeholder={visibility === 'hunt' ? 'e.g., Find the coffee machine treasure!' : 'Enter drop title...'}
+                autoComplete="off"
+                data-lpignore="true"
+                data-1p-ignore="true"
+                data-bwignore="true"
+                data-form-type="other"
+                {...form.register('title')}
+              />
+              {form.formState.errors.title && (
+                <p className="text-sm text-red-600">{form.formState.errors.title.message}</p>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {visibility === 'hunt' ? 'Clue description' : 'Description'}
+              </label>
+              <textarea
+                placeholder={visibility === 'hunt' ? 'Give hunters a hint about this location...' : 'Optional description...'}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                rows={3}
+                autoComplete="off"
+                data-lpignore="true"
+                data-1p-ignore="true"
+                data-bwignore="true"
+                data-form-type="other"
+                {...form.register('description')}
+              />
+              {form.formState.errors.description && (
+                <p className="text-sm text-red-600">{form.formState.errors.description.message}</p>
+              )}
+            </div>
+
+            {/* Secret Phrase */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Secret phrase *
+              </label>
+              <div className="relative">
+                <Input
+                  type={showSecret ? 'text' : 'password'}
+                  placeholder={visibility === 'hunt' ? 'e.g., coffee time' : 'Enter secret phrase...'}
+                  className="pr-10"
+                  autoComplete="new-password"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  data-lpignore="true"
+                  data-1p-ignore="true"
+                  data-bwignore="true"
+                  data-form-type="other"
+                  data-1password-ignore="true"
+                  readOnly
+                  onFocus={(e) => e.target.removeAttribute('readonly')}
+                  {...form.register('secret')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSecret(!showSecret)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">
+                {visibility === 'hunt' 
+                  ? 'This phrase will be shared with hunt participants' 
+                  : 'This phrase will be required to unlock your drop'
+                }
+              </p>
+              {form.formState.errors.secret && (
+                <p className="text-sm text-red-600">{form.formState.errors.secret.message}</p>
+              )}
+            </div>
+
+            {/* Drop Radius Display */}
+            <div className={cn(
+              "rounded-lg p-4 border-2",
+              radiusValue < 100 && "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+              radiusValue >= 100 && radiusValue < 300 && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+              radiusValue >= 300 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+            )}>
+              <div className="flex items-start gap-3">
+                <div className={cn(
+                  "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                  radiusValue < 100 && "bg-purple-500",
+                  radiusValue >= 100 && radiusValue < 300 && "bg-blue-500",
+                  radiusValue >= 300 && "bg-green-500"
+                )}>
+                  <MapPin className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className={cn(
+                      "font-medium flex items-center gap-2",
+                      radiusValue < 100 && "text-purple-900 dark:text-purple-100",
+                      radiusValue >= 100 && radiusValue < 300 && "text-blue-900 dark:text-blue-100",
+                      radiusValue >= 300 && "text-green-900 dark:text-green-100"
+                    )}>
+                      Drop Radius
+                      {radiusValue < 100 && <span className="text-xs">👑 Premium</span>}
+                      {radiusValue >= 100 && radiusValue < 300 && <span className="text-xs">💳 Paid</span>}
+                      {radiusValue >= 300 && <span className="text-xs">🆓 Free</span>}
+                    </h4>
+                    <span className={cn(
+                      "text-lg font-bold",
+                      radiusValue < 100 && "text-purple-900 dark:text-purple-100",
+                      radiusValue >= 100 && radiusValue < 300 && "text-blue-900 dark:text-blue-100",
+                      radiusValue >= 300 && "text-green-900 dark:text-green-100"
+                    )}>
+                      {formatDistance(radiusValue)}
+                    </span>
+                  </div>
+                  <p className={cn(
+                    "text-sm",
+                    radiusValue < 100 && "text-purple-700 dark:text-purple-300",
+                    radiusValue >= 100 && radiusValue < 300 && "text-blue-700 dark:text-blue-300",
+                    radiusValue >= 300 && "text-green-700 dark:text-green-300"
+                  )}>
+                    {radiusValue <= 25 && '🏢 High precision - Files unlock within room/building'}
+                    {radiusValue > 25 && radiusValue <= 100 && '🏙️ High precision - Files unlock within city block'}
+                    {radiusValue > 100 && radiusValue <= 300 && '🏛️ Medium precision - Files unlock within district'}
+                    {radiusValue > 300 && '🗺️ General area - Files unlock within neighborhood'}
+                  </p>
+                  <p className={cn(
+                    "text-xs mt-2",
+                    radiusValue < 100 && "text-purple-600 dark:text-purple-400",
+                    radiusValue >= 100 && radiusValue < 300 && "text-blue-600 dark:text-blue-400",
+                    radiusValue >= 300 && "text-green-600 dark:text-green-400"
+                  )}>
+                    💡 <strong>Tip:</strong> Adjust the radius using the slider on the map before opening this dialog.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Unlock Mode - only show for non-hunt drops */}
+            {visibility !== 'hunt' && (
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Unlock Mode
+                </label>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Remote Mode Card */}
+                  <button
+                    type="button"
+                    onClick={() => handleRetrievalModeChange('remote')}
+                    className={cn(
+                      'relative p-4 rounded-lg border-2 transition-all text-left',
+                      selectedRetrievalMode === 'remote'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 hover:border-gray-300',
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                          <Wifi className="w-5 h-5 text-white" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm">Remote Unlock</span>
+                          <Radio className="w-3 h-3 text-blue-500" />
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          Access from anywhere with coordinates & secret phrase
+                        </p>
+                        <div className="mt-2 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+                          <Sparkles className="w-3 h-3" />
+                          <span>Available on all tiers</span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Physical Mode Card */}
+                  <button
+                    type="button"
+                    onClick={() => handleRetrievalModeChange('physical')}
+                    className={cn(
+                      'relative p-4 rounded-lg border-2 transition-all text-left',
+                      selectedRetrievalMode === 'physical'
+                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                        : 'border-gray-200 hover:border-gray-300',
+                      !tierLimits.canUsePhysicalMode && 'opacity-75'
+                    )}
+                  >
+                    {!tierLimits.canUsePhysicalMode && (
+                      <div className="absolute -top-2 -right-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
+                        <Crown className="w-3 h-3" />
+                        <span>Premium+</span>
+                      </div>
+                    )}
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        <div className={cn(
+                          'w-10 h-10 rounded-lg flex items-center justify-center',
+                          tierLimits.canUsePhysicalMode 
+                            ? 'bg-purple-500' 
+                            : 'bg-gray-300 dark:bg-gray-600'
+                        )}>
+                          <Navigation className="w-5 h-5 text-white" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm">Physical Unlock</span>
+                          {tierLimits.canUsePhysicalMode && (
+                            <Radio className="w-3 h-3 text-purple-500" />
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          Must be physically present at the location to access
+                        </p>
+                        {tierLimits.canUsePhysicalMode ? (
+                          <div className="mt-2 flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400">
+                            <Navigation className="w-3 h-3" />
+                            <span>GPS validation enabled</span>
+                          </div>
+                        ) : (
+                          <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
+                            <Crown className="w-3 h-3" />
+                            <span>Upgrade to unlock</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Info Box */}
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-xs text-gray-600 dark:text-gray-400">
+                  {selectedRetrievalMode === 'remote' ? (
+                    <div className="flex items-start gap-2">
+                      <Wifi className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="text-gray-900 dark:text-gray-100">Remote mode:</strong> Anyone with the coordinates and secret phrase can access the files from anywhere in the world. Perfect for secure sharing with trusted recipients.
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2">
+                      <Navigation className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="text-gray-900 dark:text-gray-100">Physical mode:</strong> Requires users to be physically present within the geofence radius to unlock. GPS-validated for treasure hunts, geocaching, and location-based experiences.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Expiry */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Auto-expire after
+              </label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                onChange={(e) => {
+                  const days = parseInt(e.target.value)
+                  if (days > 0) {
+                    const expiryDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000)
+                    form.setValue('expiresAt', expiryDate)
+                  } else {
+                    form.setValue('expiresAt', undefined)
+                  }
+                }}
+                defaultValue={user ? getExpiryDays(user.tier, visibility === 'public').toString() : '30'}
+              >
+                {user && visibility === 'public' && user.tier === 'free' ? (
+                  <>
+                    <option value="3">3 days (free tier limit)</option>
+                    <option value="1">1 day</option>
+                  </>
+                ) : (
+                  <>
+                    <option value={user ? getExpiryDays(user.tier, visibility === 'public').toString() : '30'}>
+                      {user ? getExpiryDays(user.tier, visibility === 'public') : 30} days (default)
+                    </option>
+                    <option value="1">1 day</option>
+                    <option value="7">7 days</option>
+                    {user?.tier !== 'free' && <option value="30">30 days</option>}
+                    {user?.tier !== 'free' && <option value="60">60 days</option>}
+                    {(user?.tier === 'paid' || user?.tier === 'premium') && <option value="0">Never expire</option>}
+                  </>
+                )}
+              </select>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={uploading || files.length === 0 || !selectedLocation}
+                className="flex-1"
+              >
+                {uploading ? (
+                  visibility === 'hunt' ? 'Creating Hunt...' : 'Creating...'
+                ) : (
+                  visibility === 'hunt' ? 'Create Hunt' : 'Bury Drop'
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <Crown className="w-6 h-6 text-purple-500" />
+                Upgrade to Premium
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <p className="text-gray-600 dark:text-gray-400">
+                Unlock premium features and take your drops to the next level!
+              </p>
+
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 space-y-3">
+                <h4 className="font-medium text-purple-900 dark:text-purple-100">
+                  Premium Benefits:
+                </h4>
+                <ul className="space-y-2 text-sm text-purple-800 dark:text-purple-200">
+                  {user && getUpgradeBenefits(user.tier, 'premium').map((benefit, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-purple-500 mt-0.5">✓</span>
+                      <span>{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="flex-1"
+                >
+                  Maybe Later
+                </Button>
+                <Button
+                  onClick={() => {
+                    sonnerToast.info('Coming soon!', {
+                      description: 'Upgrade functionality will be available soon.',
+                    })
+                    setShowUpgradeModal(false)
+                  }}
+                  className="flex-1 bg-purple-500 hover:bg-purple-600"
+                >
+                  <Crown className="w-4 h-4 mr-2" />
+                  Upgrade Now
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Share Drop Success Modal */}
+      {createdDrop && (
+        <ShareDropSuccessModal
+          isOpen={showShareModal}
+          onClose={() => {
+            setShowShareModal(false)
+            setCreatedDrop(null)
+            onClose()
+          }}
+          dropId={createdDrop.id}
+          dropTitle={createdDrop.title}
+          dropType={createdDrop.dropType}
+        />
+      )}
+    </>
+  )
+}
