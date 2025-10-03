@@ -6,7 +6,8 @@ import type { UserTier, TierLimits } from '@/types'
 export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   free: {
     maxFileSizeMB: 100,
-    defaultExpiryDays: 30,
+    defaultExpiryDays: 30, // Default for hidden drops
+    publicDropExpiryDays: 3, // ⚡ Public drops expire in 3 days for free tier
     minRadiusM: 300, // Free users: 300-500m
     maxRadiusM: 500,
     canUsePrivateSpots: true,
@@ -16,6 +17,7 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   premium: {
     maxFileSizeMB: 500,
     defaultExpiryDays: 365,
+    publicDropExpiryDays: 365, // Premium: public drops last as long as hidden
     minRadiusM: 10, // Premium: 10-500m (full range!)
     maxRadiusM: 500,
     canUsePrivateSpots: true,
@@ -25,6 +27,7 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   paid: {
     maxFileSizeMB: 250,
     defaultExpiryDays: -1, // Unlimited
+    publicDropExpiryDays: -1, // Paid: unlimited for both
     minRadiusM: 100, // Paid: 100-500m
     maxRadiusM: 500,
     canUsePrivateSpots: true,
@@ -49,6 +52,21 @@ export const TIER_COLORS: Record<UserTier, string> = {
   free: 'gray',
   premium: 'purple',
   paid: 'blue'
+}
+
+/**
+ * Get expiry days based on tier and drop visibility
+ */
+export function getExpiryDays(tier: UserTier, isPublicDrop: boolean): number {
+  const limits = getTierLimits(tier)
+  
+  // For public drops visible on the map, use restricted expiry for free tier
+  if (isPublicDrop && tier === 'free') {
+    return limits.publicDropExpiryDays || limits.defaultExpiryDays
+  }
+  
+  // Hidden drops or paid tiers use default expiry
+  return limits.defaultExpiryDays
 }
 
 /**
@@ -190,7 +208,7 @@ export const TIER_INFO: Record<UserTier, {
       '100MB file limit',
       '300-500m radius only',
       'Remote unlock only',
-      '30 day expiry'
+      '3 days (public) / 30 days (hidden)'
     ]
   },
   premium: {

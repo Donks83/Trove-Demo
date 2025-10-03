@@ -23,6 +23,7 @@ export interface Coordinates {
 export interface TierLimits {
   maxFileSizeMB: number
   defaultExpiryDays: number
+  publicDropExpiryDays?: number // Optional: different expiry for public drops on map
   minRadiusM: number
   maxRadiusM: number
   canUsePrivateSpots: boolean

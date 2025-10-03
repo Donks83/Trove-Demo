@@ -13,7 +13,7 @@ import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/ui/toaster'
 import { toast as sonnerToast } from 'sonner'
 import { createDropSchema } from '@/lib/validations'
-import { getTierLimits, validateDropForTier, getUpgradeBenefits } from '@/lib/tiers'
+import { getTierLimits, validateDropForTier, getUpgradeBenefits, getExpiryDays } from '@/lib/tiers'
 import { formatDistance } from '@/lib/geo'
 import type { CreateDropInput } from '@/lib/validations'
 import { cn } from '@/lib/utils'
@@ -959,6 +959,14 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Auto-expire after
               </label>
+              {user && dropType === 'public' && user.tier === 'free' && (
+                <div className="mb-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <p className="text-xs text-amber-800 dark:text-amber-200">
+                    <strong>⚡ Free tier public drops expire in 3 days</strong> to keep the map clean and prevent clutter. 
+                    Hidden drops last 30 days. Want longer? Upgrade to Premium for 365-day expiry!
+                  </p>
+                </div>
+              )}
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 onChange={(e) => {
@@ -970,14 +978,27 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                     form.setValue('expiresAt', undefined)
                   }
                 }}
-                defaultValue={tierLimits.defaultExpiryDays.toString()}
+                defaultValue={user ? getExpiryDays(user.tier, dropType === 'public').toString() : '30'}
               >
-                <option value={tierLimits.defaultExpiryDays}>{tierLimits.defaultExpiryDays} days (default)</option>
-                <option value="1">1 day</option>
-                <option value="7">7 days</option>
-                {user?.tier !== 'free' && <option value="30">30 days</option>}
-                {user?.tier !== 'free' && <option value="60">60 days</option>}
-                {user?.tier !== 'free' && <option value="0">Never expire</option>}
+                {user && dropType === 'public' && user.tier === 'free' ? (
+                  // Free tier public drops: 3 days max
+                  <>
+                    <option value="3">3 days (free tier limit)</option>
+                    <option value="1">1 day</option>
+                  </>
+                ) : (
+                  // Hidden drops or paid tiers: normal expiry
+                  <>
+                    <option value={user ? getExpiryDays(user.tier, dropType === 'public').toString() : '30'}>
+                      {user ? getExpiryDays(user.tier, dropType === 'public') : 30} days (default)
+                    </option>
+                    <option value="1">1 day</option>
+                    <option value="7">7 days</option>
+                    {user?.tier !== 'free' && <option value="30">30 days</option>}
+                    {user?.tier !== 'free' && <option value="60">60 days</option>}
+                    {(user?.tier === 'paid' || user?.tier === 'premium') && <option value="0">Never expire</option>}
+                  </>
+                )}
               </select>
             </div>
 
