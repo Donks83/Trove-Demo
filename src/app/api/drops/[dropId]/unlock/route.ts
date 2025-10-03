@@ -4,6 +4,9 @@ import { demoDropsStore } from '@/lib/demo-storage'
 import { verifyAuthToken } from '@/lib/auth-server'
 import { createHash } from 'crypto'
 
+// Force this route to be dynamic (not statically rendered)
+export const dynamic = 'force-dynamic'
+
 interface RouteContext {
   params: {
     dropId: string

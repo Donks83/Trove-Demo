@@ -4,6 +4,9 @@ import { createHash } from 'crypto'
 import { getDrop, updateDropStats, getDropsNearLocation } from '@/lib/firestore-drops'
 import { verifyAuthToken } from '@/lib/auth-server'
 
+// Force this route to be dynamic (not statically rendered)
+export const dynamic = 'force-dynamic'
+
 // Add CORS headers for mobile app
 function addCorsHeaders(response: NextResponse) {
   response.headers.set('Access-Control-Allow-Origin', '*')

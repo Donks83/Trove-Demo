@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuthToken } from '@/lib/auth-server'
 import { getDrops } from '@/lib/firestore-drops'
 
+// Force this route to be dynamic (not statically rendered)
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     console.log('GET /api/user/drops called')

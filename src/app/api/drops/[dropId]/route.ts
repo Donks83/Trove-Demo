@@ -4,6 +4,9 @@ import { getDrop, deleteDrop, updateDrop, updateDropStats } from '@/lib/firestor
 import { deleteDropFiles } from '@/lib/firebase-storage'
 import { createHash } from 'crypto'
 
+// Force this route to be dynamic (not statically rendered)
+export const dynamic = 'force-dynamic'
+
 interface RouteContext {
   params: {
     dropId: string

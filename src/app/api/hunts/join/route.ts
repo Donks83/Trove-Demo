@@ -4,6 +4,9 @@ import { demoDropsStore } from '@/lib/demo-storage'
 import type { JoinHuntByCodeRequest, JoinHuntByCodeResponse } from '@/types'
 import { isValidHuntCode } from '@/lib/hunt-permissions'
 
+// Force this route to be dynamic (not statically rendered)
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication

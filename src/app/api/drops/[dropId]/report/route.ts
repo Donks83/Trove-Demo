@@ -3,6 +3,9 @@ import { verifyAuthToken } from '@/lib/auth-server'
 import { getDrop } from '@/lib/firestore-drops'
 import { createReport } from '@/lib/firestore-reports'
 
+// Force this route to be dynamic (not statically rendered)
+export const dynamic = 'force-dynamic'
+
 interface RouteContext {
   params: {
     dropId: string

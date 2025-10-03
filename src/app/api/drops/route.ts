@@ -6,6 +6,9 @@ import { uploadFileToStorage } from '@/lib/firebase-storage'
 import { createDrop, getDrops, FirestoreDrop } from '@/lib/firestore-drops'
 import { canUsePhysicalMode, validateRadius, validateFileSize, getTierLimits } from '@/lib/tiers'
 
+// Force this route to be dynamic (not statically rendered)
+export const dynamic = 'force-dynamic'
+
 // Add CORS headers for mobile app
 function addCorsHeaders(response: NextResponse) {
   response.headers.set('Access-Control-Allow-Origin', '*')

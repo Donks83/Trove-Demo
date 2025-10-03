@@ -4,6 +4,9 @@ import { downloadFileFromStorage, fileExists } from '@/lib/firebase-storage'
 import { demoDropsStore } from '@/lib/demo-storage'
 import { getDrop } from '@/lib/firestore-drops'
 
+// Force this route to be dynamic (not statically rendered)
+export const dynamic = 'force-dynamic'
+
 // Demo file contents for different file types
 const demoFiles: Record<string, { content: string; mimeType: string; isBase64?: boolean }> = {
   // Test Drop 1 Files
