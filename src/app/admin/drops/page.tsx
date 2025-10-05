@@ -48,7 +48,7 @@ export default function AdminDropsPage() {
       return
     }
     loadDrops()
-  }, [user, router])
+  }, [user, router, loadDrops])
 
   useEffect(() => {
     // Filter drops based on search query

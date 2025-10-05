@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { User, Settings, LogOut, Moon, Sun, Menu, X, Crown, Shield } from 'lucide-react'
+import { User, Settings, LogOut, Moon, Sun, Menu, X, Crown, Shield, AlertCircle } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/components/auth-provider'
 import { AuthModal } from '@/components/auth/auth-modal'
@@ -22,7 +22,7 @@ interface NavigationProps {
 }
 
 export function Navigation({ className }: NavigationProps) {
-  const { user, signOut } = useAuth()
+  const { user, signOut, firebaseUser } = useAuth()
   const { theme, setTheme } = useTheme()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showHuntDashboard, setShowHuntDashboard] = useState(false)

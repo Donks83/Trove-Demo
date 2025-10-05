@@ -45,7 +45,7 @@ export default function AdminUsersPage() {
       return
     }
     loadUsers()
-  }, [user, router])
+  }, [user, router, loadUsers])
 
   useEffect(() => {
     // Filter users based on search query
