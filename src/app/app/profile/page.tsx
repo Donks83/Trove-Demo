@@ -2,18 +2,21 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, User, Camera, Mail, Crown, Users } from 'lucide-react'
+import { ArrowLeft, User, Camera, Mail, Crown, Users, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/ui/toaster'
+import { sendEmailVerification } from 'firebase/auth'
+import { toast as sonnerToast } from 'sonner'
 
 export default function ProfilePage() {
-  const { user, updateUserProfile } = useAuth()
+  const { user, updateUserProfile, firebaseUser } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
   const [editing, setEditing] = useState(false)
   const [displayName, setDisplayName] = useState(user?.displayName || '')
+  const [sendingVerification, setSendingVerification] = useState(false)
 
   if (!user) {
     router.push('/')
@@ -34,6 +37,46 @@ export default function ProfilePage() {
         description: 'Failed to update profile. Please try again.',
         variant: 'destructive',
       })
+    }
+  }
+
+  const handleResendVerification = async () => {
+    if (!firebaseUser) return
+
+    try {
+      setSendingVerification(true)
+      await sendEmailVerification(firebaseUser)
+      sonnerToast.success('Verification email sent!', {
+        description: 'Please check your email inbox and spam folder.',
+      })
+    } catch (error: any) {
+      console.error('Error sending verification:', error)
+      sonnerToast.error('Failed to send verification email', {
+        description: error.message || 'Please try again later.',
+      })
+    } finally {
+      setSendingVerification(false)
+    }
+  }
+
+  const handleReloadUser = async () => {
+    if (!firebaseUser) return
+
+    try {
+      await firebaseUser.reload()
+      if (firebaseUser.emailVerified) {
+        sonnerToast.success('Email verified!', {
+          description: 'Your email has been verified. You can now create drops!',
+        })
+        // Force a re-render by reloading the page
+        window.location.reload()
+      } else {
+        sonnerToast.info('Not verified yet', {
+          description: 'Please check your email and click the verification link.',
+        })
+      }
+    } catch (error) {
+      console.error('Error reloading user:', error)
     }
   }
 
@@ -121,9 +164,48 @@ export default function ProfilePage() {
                 </div>
               </div>
               
-              <div className="flex items-center text-gray-600 dark:text-gray-400 mb-4">
+              <div className="flex items-center text-gray-600 dark:text-gray-400 mb-2">
                 <Mail className="w-4 h-4 mr-2" />
                 {user.email}
+              </div>
+
+              {/* Email Verification Status */}
+              <div className="mb-4">
+                {firebaseUser?.emailVerified ? (
+                  <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                    <CheckCircle className="w-4 h-4" />
+                    <span className="text-sm font-medium">Email verified</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="text-sm font-medium">Email not verified</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        onClick={handleResendVerification}
+                        variant="outline"
+                        size="sm"
+                        disabled={sendingVerification}
+                        className="text-xs"
+                      >
+                        {sendingVerification ? 'Sending...' : 'Resend Verification Email'}
+                      </Button>
+                      <Button
+                        onClick={handleReloadUser}
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs"
+                      >
+                        I've verified
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      You need to verify your email before creating drops
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="flex space-x-3">

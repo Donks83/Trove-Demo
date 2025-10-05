@@ -160,6 +160,21 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
   const onSubmit = async (data: CreateDropInput) => {
     if (!user || !firebaseUser || !selectedLocation || files.length === 0) return
 
+    // Check if email is verified
+    if (!firebaseUser.emailVerified) {
+      sonnerToast.error('Email verification required', {
+        description: 'Please verify your email before creating drops. Check your profile to resend the verification email.',
+        action: {
+          label: 'Go to Profile',
+          onClick: () => {
+            onClose()
+            window.location.href = '/app/profile'
+          },
+        },
+      })
+      return
+    }
+
     setUploading(true)
     try {
       const totalSizeMB = files.reduce((sum, file) => sum + file.size, 0) / (1024 * 1024)

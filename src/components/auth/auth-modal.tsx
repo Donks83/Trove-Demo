@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from 'firebase/auth'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { auth } from '@/lib/firebase'
@@ -75,11 +75,22 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
     setLoading(true)
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password)
-      // The AuthProvider will handle creating the user document
-      toast({
-        title: 'Welcome to Trove!',
-        description: 'Your account has been created successfully.',
-      })
+      
+      // Send email verification
+      try {
+        await sendEmailVerification(userCredential.user)
+        toast({
+          title: 'Welcome to Trove!',
+          description: 'Please check your email to verify your account. You\'ll need to verify before creating drops.',
+        })
+      } catch (verifyError) {
+        console.error('Error sending verification email:', verifyError)
+        toast({
+          title: 'Account created',
+          description: 'Your account was created, but we couldn\'t send a verification email. You can resend it from your profile.',
+        })
+      }
+      
       onClose()
     } catch (error: any) {
       toast({

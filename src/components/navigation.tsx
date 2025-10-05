@@ -50,6 +50,24 @@ export function Navigation({ className }: NavigationProps) {
 
   return (
     <>
+      {/* Email Verification Banner */}
+      {user && firebaseUser && !firebaseUser.emailVerified && (
+        <div className="bg-amber-500 text-white px-4 py-2 text-center text-sm">
+          <div className="flex items-center justify-center gap-2 max-w-7xl mx-auto">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>
+              Please verify your email to create drops.
+            </span>
+            <button
+              onClick={() => window.location.href = '/app/profile'}
+              className="underline hover:no-underline font-medium ml-2"
+            >
+              Verify Now
+            </button>
+          </div>
+        </div>
+      )}
+      
       <nav className={cn('bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700', className)}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
