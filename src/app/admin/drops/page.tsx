@@ -42,31 +42,6 @@ export default function AdminDropsPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deletingDrop, setDeletingDrop] = useState(false)
 
-  useEffect(() => {
-    if (!user || !user.isAdmin) {
-      router.push('/')
-      return
-    }
-    loadDrops()
-  }, [user, router, loadDrops])
-
-  useEffect(() => {
-    // Filter drops based on search query
-    if (!searchQuery) {
-      setFilteredDrops(drops)
-    } else {
-      const query = searchQuery.toLowerCase()
-      setFilteredDrops(
-        drops.filter(
-          (d) =>
-            d.title.toLowerCase().includes(query) ||
-            d.ownerEmail?.toLowerCase().includes(query) ||
-            d.id.includes(query)
-        )
-      )
-    }
-  }, [searchQuery, drops])
-
   const loadDrops = useCallback(async () => {
     try {
       setLoading(true)
@@ -92,6 +67,31 @@ export default function AdminDropsPage() {
       setLoading(false)
     }
   }, [firebaseUser])
+
+  useEffect(() => {
+    if (!user || !user.isAdmin) {
+      router.push('/')
+      return
+    }
+    loadDrops()
+  }, [user, router, loadDrops])
+
+  useEffect(() => {
+    // Filter drops based on search query
+    if (!searchQuery) {
+      setFilteredDrops(drops)
+    } else {
+      const query = searchQuery.toLowerCase()
+      setFilteredDrops(
+        drops.filter(
+          (d) =>
+            d.title.toLowerCase().includes(query) ||
+            d.ownerEmail?.toLowerCase().includes(query) ||
+            d.id.includes(query)
+        )
+      )
+    }
+  }, [searchQuery, drops])
 
   const deleteDrop = async () => {
     if (!selectedDrop) return

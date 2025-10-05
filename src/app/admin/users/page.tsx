@@ -39,31 +39,6 @@ export default function AdminUsersPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deletingUser, setDeletingUser] = useState(false)
 
-  useEffect(() => {
-    if (!user || !user.isAdmin) {
-      router.push('/')
-      return
-    }
-    loadUsers()
-  }, [user, router, loadUsers])
-
-  useEffect(() => {
-    // Filter users based on search query
-    if (!searchQuery) {
-      setFilteredUsers(users)
-    } else {
-      const query = searchQuery.toLowerCase()
-      setFilteredUsers(
-        users.filter(
-          (u) =>
-            u.email.toLowerCase().includes(query) ||
-            u.displayName?.toLowerCase().includes(query) ||
-            u.uid.includes(query)
-        )
-      )
-    }
-  }, [searchQuery, users])
-
   const loadUsers = useCallback(async () => {
     try {
       setLoading(true)
@@ -89,6 +64,31 @@ export default function AdminUsersPage() {
       setLoading(false)
     }
   }, [firebaseUser])
+
+  useEffect(() => {
+    if (!user || !user.isAdmin) {
+      router.push('/')
+      return
+    }
+    loadUsers()
+  }, [user, router, loadUsers])
+
+  useEffect(() => {
+    // Filter users based on search query
+    if (!searchQuery) {
+      setFilteredUsers(users)
+    } else {
+      const query = searchQuery.toLowerCase()
+      setFilteredUsers(
+        users.filter(
+          (u) =>
+            u.email.toLowerCase().includes(query) ||
+            u.displayName?.toLowerCase().includes(query) ||
+            u.uid.includes(query)
+        )
+      )
+    }
+  }, [searchQuery, users])
 
   const updateUserTier = async (userId: string, newTier: UserTier) => {
     try {
