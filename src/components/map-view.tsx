@@ -369,8 +369,8 @@ export function MapView({ className }: MapViewProps) {
           </div>
         </div>
 
-        {/* Radius Control Widget - shows when location is selected in bury mode */}
-        {mode === 'bury' && selectedLocation && (
+        {/* Radius Control Widget - shows when location is selected in bury mode (hidden when modal is open) */}
+        {mode === 'bury' && selectedLocation && !showCreateModal && (
           <div className="absolute top-20 right-4 z-[1000] bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-lg max-w-xs">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">

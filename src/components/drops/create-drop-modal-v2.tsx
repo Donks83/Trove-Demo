@@ -48,6 +48,7 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [createdDrop, setCreatedDrop] = useState<any>(null)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [radiusExpanded, setRadiusExpanded] = useState(false)
 
   const tierLimits = user ? getTierLimits(user.tier) : getTierLimits('free')
 
@@ -707,15 +708,20 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
               )}
             </div>
 
-            {/* Drop Radius Display - Collapsible on mobile */}
-            <details className="group" open>
-              <summary className="cursor-pointer list-none sm:hidden">
-                <div className={cn(
-                  "rounded-lg p-3 border-2 flex items-center justify-between",
-                  radiusValue < 100 && "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
-                  radiusValue >= 100 && radiusValue < 300 && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
-                  radiusValue >= 300 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-                )}>
+            {/* Drop Radius Display - Collapsible on mobile, always visible on desktop */}
+            <div className="space-y-2">
+              {/* Mobile: Collapsible */}
+              <div className="sm:hidden">
+                <button
+                  type="button"
+                  onClick={() => setRadiusExpanded(!radiusExpanded)}
+                  className={cn(
+                    "w-full rounded-lg p-3 border-2 flex items-center justify-between transition-all",
+                    radiusValue < 100 && "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+                    radiusValue >= 100 && radiusValue < 300 && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+                    radiusValue >= 300 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                  )}
+                >
                   <div className="flex items-center gap-2">
                     <MapPin className={cn(
                       "w-5 h-5",
@@ -725,70 +731,135 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                     )} />
                     <span className="font-medium text-sm">Drop Radius: {formatDistance(radiusValue)}</span>
                   </div>
-                  <span className="text-xs group-open:hidden">Tap to expand</span>
-                </div>
-              </summary>
-              
-              <div className={cn(
-                "rounded-lg p-4 border-2 mt-2 sm:mt-0 hidden group-open:block sm:block",
-                radiusValue < 100 && "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
-                radiusValue >= 100 && radiusValue < 300 && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
-                radiusValue >= 300 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-              )}>
-              <div className="flex items-start gap-3">
-                <div className={cn(
-                  "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
-                  radiusValue < 100 && "bg-purple-500",
-                  radiusValue >= 100 && radiusValue < 300 && "bg-blue-500",
-                  radiusValue >= 300 && "bg-green-500"
-                )}>
-                  <MapPin className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className={cn(
-                      "font-medium flex items-center gap-2",
-                      radiusValue < 100 && "text-purple-900 dark:text-purple-100",
-                      radiusValue >= 100 && radiusValue < 300 && "text-blue-900 dark:text-blue-100",
-                      radiusValue >= 300 && "text-green-900 dark:text-green-100"
-                    )}>
-                      Drop Radius
-                      {radiusValue < 100 && <span className="text-xs">👑 Premium</span>}
-                      {radiusValue >= 100 && radiusValue < 300 && <span className="text-xs">💳 Paid</span>}
-                      {radiusValue >= 300 && <span className="text-xs">🆓 Free</span>}
-                    </h4>
-                    <span className={cn(
-                      "text-lg font-bold",
-                      radiusValue < 100 && "text-purple-900 dark:text-purple-100",
-                      radiusValue >= 100 && radiusValue < 300 && "text-blue-900 dark:text-blue-100",
-                      radiusValue >= 300 && "text-green-900 dark:text-green-100"
-                    )}>
-                      {formatDistance(radiusValue)}
-                    </span>
+                  <span className="text-xs">{radiusExpanded ? 'Collapse' : 'Expand'}</span>
+                </button>
+                
+                {radiusExpanded && (
+                  <div className={cn(
+                    "rounded-lg p-4 border-2 mt-2",
+                    radiusValue < 100 && "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+                    radiusValue >= 100 && radiusValue < 300 && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+                    radiusValue >= 300 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                  )}>
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                        radiusValue < 100 && "bg-purple-500",
+                        radiusValue >= 100 && radiusValue < 300 && "bg-blue-500",
+                        radiusValue >= 300 && "bg-green-500"
+                      )}>
+                        <MapPin className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className={cn(
+                            "font-medium flex items-center gap-2",
+                            radiusValue < 100 && "text-purple-900 dark:text-purple-100",
+                            radiusValue >= 100 && radiusValue < 300 && "text-blue-900 dark:text-blue-100",
+                            radiusValue >= 300 && "text-green-900 dark:text-green-100"
+                          )}>
+                            Drop Radius
+                            {radiusValue < 100 && <span className="text-xs">👑 Premium</span>}
+                            {radiusValue >= 100 && radiusValue < 300 && <span className="text-xs">💳 Paid</span>}
+                            {radiusValue >= 300 && <span className="text-xs">🆓 Free</span>}
+                          </h4>
+                          <span className={cn(
+                            "text-lg font-bold",
+                            radiusValue < 100 && "text-purple-900 dark:text-purple-100",
+                            radiusValue >= 100 && radiusValue < 300 && "text-blue-900 dark:text-blue-100",
+                            radiusValue >= 300 && "text-green-900 dark:text-green-100"
+                          )}>
+                            {formatDistance(radiusValue)}
+                          </span>
+                        </div>
+                        <p className={cn(
+                          "text-sm",
+                          radiusValue < 100 && "text-purple-700 dark:text-purple-300",
+                          radiusValue >= 100 && radiusValue < 300 && "text-blue-700 dark:text-blue-300",
+                          radiusValue >= 300 && "text-green-700 dark:text-green-300"
+                        )}>
+                          {radiusValue <= 25 && '🏢 High precision - Files unlock within room/building'}
+                          {radiusValue > 25 && radiusValue <= 100 && '🏙️ High precision - Files unlock within city block'}
+                          {radiusValue > 100 && radiusValue <= 300 && '🏛️ Medium precision - Files unlock within district'}
+                          {radiusValue > 300 && '🗺️ General area - Files unlock within neighborhood'}
+                        </p>
+                        <p className={cn(
+                          "text-xs mt-2",
+                          radiusValue < 100 && "text-purple-600 dark:text-purple-400",
+                          radiusValue >= 100 && radiusValue < 300 && "text-blue-600 dark:text-blue-400",
+                          radiusValue >= 300 && "text-green-600 dark:text-green-400"
+                        )}>
+                          💡 <strong>Tip:</strong> Adjust the radius using the slider on the map before opening this dialog.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <p className={cn(
-                    "text-sm",
-                    radiusValue < 100 && "text-purple-700 dark:text-purple-300",
-                    radiusValue >= 100 && radiusValue < 300 && "text-blue-700 dark:text-blue-300",
-                    radiusValue >= 300 && "text-green-700 dark:text-green-300"
-                  )}>
-                    {radiusValue <= 25 && '🏢 High precision - Files unlock within room/building'}
-                    {radiusValue > 25 && radiusValue <= 100 && '🏙️ High precision - Files unlock within city block'}
-                    {radiusValue > 100 && radiusValue <= 300 && '🏛️ Medium precision - Files unlock within district'}
-                    {radiusValue > 300 && '🗺️ General area - Files unlock within neighborhood'}
-                  </p>
-                  <p className={cn(
-                    "text-xs mt-2",
-                    radiusValue < 100 && "text-purple-600 dark:text-purple-400",
-                    radiusValue >= 100 && radiusValue < 300 && "text-blue-600 dark:text-blue-400",
-                    radiusValue >= 300 && "text-green-600 dark:text-green-400"
-                  )}>
-                    💡 <strong>Tip:</strong> Adjust the radius using the slider on the map before opening this dialog.
-                  </p>
+                )}
+              </div>
+
+              {/* Desktop: Always visible */}
+              <div className="hidden sm:block">
+                <div className={cn(
+                  "rounded-lg p-4 border-2",
+                  radiusValue < 100 && "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+                  radiusValue >= 100 && radiusValue < 300 && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+                  radiusValue >= 300 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                )}>
+                  <div className="flex items-start gap-3">
+                    <div className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                      radiusValue < 100 && "bg-purple-500",
+                      radiusValue >= 100 && radiusValue < 300 && "bg-blue-500",
+                      radiusValue >= 300 && "bg-green-500"
+                    )}>
+                      <MapPin className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className={cn(
+                          "font-medium flex items-center gap-2",
+                          radiusValue < 100 && "text-purple-900 dark:text-purple-100",
+                          radiusValue >= 100 && radiusValue < 300 && "text-blue-900 dark:text-blue-100",
+                          radiusValue >= 300 && "text-green-900 dark:text-green-100"
+                        )}>
+                          Drop Radius
+                          {radiusValue < 100 && <span className="text-xs">👑 Premium</span>}
+                          {radiusValue >= 100 && radiusValue < 300 && <span className="text-xs">💳 Paid</span>}
+                          {radiusValue >= 300 && <span className="text-xs">🆓 Free</span>}
+                        </h4>
+                        <span className={cn(
+                          "text-lg font-bold",
+                          radiusValue < 100 && "text-purple-900 dark:text-purple-100",
+                          radiusValue >= 100 && radiusValue < 300 && "text-blue-900 dark:text-blue-100",
+                          radiusValue >= 300 && "text-green-900 dark:text-green-100"
+                        )}>
+                          {formatDistance(radiusValue)}
+                        </span>
+                      </div>
+                      <p className={cn(
+                        "text-sm",
+                        radiusValue < 100 && "text-purple-700 dark:text-purple-300",
+                        radiusValue >= 100 && radiusValue < 300 && "text-blue-700 dark:text-blue-300",
+                        radiusValue >= 300 && "text-green-700 dark:text-green-300"
+                      )}>
+                        {radiusValue <= 25 && '🏢 High precision - Files unlock within room/building'}
+                        {radiusValue > 25 && radiusValue <= 100 && '🏙️ High precision - Files unlock within city block'}
+                        {radiusValue > 100 && radiusValue <= 300 && '🏛️ Medium precision - Files unlock within district'}
+                        {radiusValue > 300 && '🗺️ General area - Files unlock within neighborhood'}
+                      </p>
+                      <p className={cn(
+                        "text-xs mt-2",
+                        radiusValue < 100 && "text-purple-600 dark:text-purple-400",
+                        radiusValue >= 100 && radiusValue < 300 && "text-blue-600 dark:text-blue-400",
+                        radiusValue >= 300 && "text-green-600 dark:text-green-400"
+                      )}>
+                        💡 <strong>Tip:</strong> Adjust the radius using the slider on the map before opening this dialog.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              </div>
-            </details>
+            </div>
 
             {/* Unlock Mode - only show for non-hunt drops */}
             {visibility !== 'hunt' && (
