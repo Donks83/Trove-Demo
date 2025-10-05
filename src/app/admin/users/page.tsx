@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { Shield, Users, Search, Crown, Trash2, AlertTriangle } from 'lucide-react'
@@ -64,7 +64,7 @@ export default function AdminUsersPage() {
     }
   }, [searchQuery, users])
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true)
       const token = await firebaseUser?.getIdToken()
@@ -88,7 +88,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [firebaseUser])
 
   const updateUserTier = async (userId: string, newTier: UserTier) => {
     try {

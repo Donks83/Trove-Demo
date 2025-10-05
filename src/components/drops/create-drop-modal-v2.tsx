@@ -772,6 +772,7 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                   </p>
                 </div>
               </div>
+              </div>
             </details>
 
             {/* Unlock Mode - only show for non-hunt drops */}

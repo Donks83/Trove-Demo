@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { Shield, Package, Search, Trash2, Eye, MapPin, AlertTriangle } from 'lucide-react'
@@ -67,7 +67,7 @@ export default function AdminDropsPage() {
     }
   }, [searchQuery, drops])
 
-  const loadDrops = async () => {
+  const loadDrops = useCallback(async () => {
     try {
       setLoading(true)
       const token = await firebaseUser?.getIdToken()
@@ -91,7 +91,7 @@ export default function AdminDropsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [firebaseUser])
 
   const deleteDrop = async () => {
     if (!selectedDrop) return
