@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-middleware'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'
-import { initializeFirebaseAdmin } from '@/lib/firebase-admin'
+import { initAdmin } from '@/lib/firebase-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +29,7 @@ export async function DELETE(
       )
     }
 
-    initializeFirebaseAdmin()
+    initAdmin()
     const db = getFirestore()
     const storage = getStorage()
 

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { verifyAuthToken } from '@/lib/auth-server'
 import { getFirestore } from 'firebase-admin/firestore'
-import { initializeFirebaseAdmin } from '@/lib/firebase-admin'
+import { initAdmin } from '@/lib/firebase-admin'
 
 export async function requireAdmin(request: NextRequest) {
   // Verify auth token
@@ -12,7 +12,7 @@ export async function requireAdmin(request: NextRequest) {
 
   // Check admin status
   try {
-    initializeFirebaseAdmin()
+    initAdmin()
     const db = getFirestore()
     const userDoc = await db.collection('users').doc(user.uid).get()
     

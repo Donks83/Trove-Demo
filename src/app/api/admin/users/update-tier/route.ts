@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-middleware'
 import { getFirestore } from 'firebase-admin/firestore'
-import { initializeFirebaseAdmin } from '@/lib/firebase-admin'
+import { initAdmin } from '@/lib/firebase-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    initializeFirebaseAdmin()
+    initAdmin()
     const db = getFirestore()
 
     // Update user tier
