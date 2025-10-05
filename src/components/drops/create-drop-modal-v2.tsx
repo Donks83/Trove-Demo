@@ -289,7 +289,7 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-2xl w-full mx-4">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
               {visibility === 'hunt' && <Crown className="w-6 h-6 text-purple-600" />}
@@ -692,13 +692,34 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
               )}
             </div>
 
-            {/* Drop Radius Display */}
-            <div className={cn(
-              "rounded-lg p-4 border-2",
-              radiusValue < 100 && "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
-              radiusValue >= 100 && radiusValue < 300 && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
-              radiusValue >= 300 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-            )}>
+            {/* Drop Radius Display - Collapsible on mobile */}
+            <details className="group" open>
+              <summary className="cursor-pointer list-none sm:hidden">
+                <div className={cn(
+                  "rounded-lg p-3 border-2 flex items-center justify-between",
+                  radiusValue < 100 && "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+                  radiusValue >= 100 && radiusValue < 300 && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+                  radiusValue >= 300 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                )}>
+                  <div className="flex items-center gap-2">
+                    <MapPin className={cn(
+                      "w-5 h-5",
+                      radiusValue < 100 && "text-purple-500",
+                      radiusValue >= 100 && radiusValue < 300 && "text-blue-500",
+                      radiusValue >= 300 && "text-green-500"
+                    )} />
+                    <span className="font-medium text-sm">Drop Radius: {formatDistance(radiusValue)}</span>
+                  </div>
+                  <span className="text-xs group-open:hidden">Tap to expand</span>
+                </div>
+              </summary>
+              
+              <div className={cn(
+                "rounded-lg p-4 border-2 mt-2 sm:mt-0 hidden group-open:block sm:block",
+                radiusValue < 100 && "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+                radiusValue >= 100 && radiusValue < 300 && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+                radiusValue >= 300 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+              )}>
               <div className="flex items-start gap-3">
                 <div className={cn(
                   "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
@@ -751,7 +772,7 @@ export function CreateDropModal({ isOpen, onClose, selectedLocation, selectedRad
                   </p>
                 </div>
               </div>
-            </div>
+            </details>
 
             {/* Unlock Mode - only show for non-hunt drops */}
             {visibility !== 'hunt' && (

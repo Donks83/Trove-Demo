@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.healthCheck = exports.onDropDelete = exports.authorizeDrop = void 0;
+exports.healthCheck = exports.onDropDelete = exports.authorizeDrop = exports.onHuntCompleted = exports.onHuntParticipantJoined = exports.onHuntInvitationAccepted = exports.onHuntDropAdded = exports.onHuntInvitation = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const firestore_1 = require("firebase-functions/v2/firestore");
 const app_1 = require("firebase-admin/app");
@@ -45,6 +45,13 @@ const geo_1 = require("./utils/geo");
 (0, app_1.initializeApp)();
 const db = (0, firestore_2.getFirestore)();
 const storage = (0, storage_1.getStorage)();
+// Import and export notification functions
+var notifications_1 = require("./notifications");
+Object.defineProperty(exports, "onHuntInvitation", { enumerable: true, get: function () { return notifications_1.onHuntInvitation; } });
+Object.defineProperty(exports, "onHuntDropAdded", { enumerable: true, get: function () { return notifications_1.onHuntDropAdded; } });
+Object.defineProperty(exports, "onHuntInvitationAccepted", { enumerable: true, get: function () { return notifications_1.onHuntInvitationAccepted; } });
+Object.defineProperty(exports, "onHuntParticipantJoined", { enumerable: true, get: function () { return notifications_1.onHuntParticipantJoined; } });
+Object.defineProperty(exports, "onHuntCompleted", { enumerable: true, get: function () { return notifications_1.onHuntCompleted; } });
 exports.authorizeDrop = (0, https_1.onCall)({
     cors: true,
     region: 'us-central1',

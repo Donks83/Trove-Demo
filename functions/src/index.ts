@@ -11,6 +11,15 @@ initializeApp()
 const db = getFirestore()
 const storage = getStorage()
 
+// Import and export notification functions
+export {
+  onHuntInvitation,
+  onHuntDropAdded,
+  onHuntInvitationAccepted,
+  onHuntParticipantJoined,
+  onHuntCompleted,
+} from './notifications'
+
 interface AuthorizeDropRequest {
   dropId: string
   secret: string

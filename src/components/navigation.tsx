@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { User, Settings, LogOut, Moon, Sun, Menu, X, Crown } from 'lucide-react'
+import { User, Settings, LogOut, Moon, Sun, Menu, X, Crown, Shield } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/components/auth-provider'
 import { AuthModal } from '@/components/auth/auth-modal'
@@ -89,6 +89,17 @@ export function Navigation({ className }: NavigationProps) {
                     <Crown className="w-4 h-4 mr-2" />
                     Treasure Hunts
                   </Button>
+                  
+                  {user.isAdmin && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => router.push('/admin')}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin
+                    </Button>
+                  )}
                 </>
               )}
 
@@ -127,6 +138,15 @@ export function Navigation({ className }: NavigationProps) {
                       <Settings className="w-4 h-4 mr-2" />
                       Settings
                     </DropdownMenuItem>
+                    {user.isAdmin && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => router.push('/admin')}>
+                          <Shield className="w-4 h-4 mr-2" />
+                          Admin Panel
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="w-4 h-4 mr-2" />
@@ -175,16 +195,44 @@ export function Navigation({ className }: NavigationProps) {
               </Button>
               
               {user && (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    router.push('/app/drops')
-                    setMobileMenuOpen(false)
-                  }}
-                >
-                  My Drops
-                </Button>
+                <>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      router.push('/app/drops')
+                      setMobileMenuOpen(false)
+                    }}
+                  >
+                    My Drops
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                    onClick={() => {
+                      setShowHuntDashboard(true)
+                      setMobileMenuOpen(false)
+                    }}
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Treasure Hunts
+                  </Button>
+                  
+                  {user.isAdmin && (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      onClick={() => {
+                        router.push('/admin')
+                        setMobileMenuOpen(false)
+                      }}
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin Panel
+                    </Button>
+                  )}
+                </>
               )}
 
               <Button
@@ -267,6 +315,11 @@ export function Navigation({ className }: NavigationProps) {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         defaultMode={authMode}
+      />
+      
+      <HuntDashboardModal
+        isOpen={showHuntDashboard}
+        onClose={() => setShowHuntDashboard(false)}
       />
     </>
   )

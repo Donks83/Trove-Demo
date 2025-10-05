@@ -37,6 +37,7 @@ export interface User {
   displayName: string
   photoURL?: string
   tier: UserTier
+  isAdmin?: boolean // Admin status for accessing admin panel
   joinedHunts?: string[] // Array of hunt codes the user has joined (optional for demo)
   createdAt: Timestamp
   updatedAt: Timestamp
